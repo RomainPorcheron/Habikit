@@ -27,7 +27,8 @@ Garder l'interface et la lisibilité de HabitKit : dashboard = liste de cartes, 
 
 ### Faites (prototype, fake data en localStorage)
 - Dashboard : cartes avec icône, nom, description, grille ~30 semaines, bouton ✓ / +, chip objectif, série.
-- Bouton carte : tap = +1 direct (ou fiche si durée/montant à saisir), appui long = fiche complète.
+- Bouton carte : tap = +1 direct (ou fiche si durée/montant à saisir, sans appui long dans ce cas), appui long = fiche complète.
+- Retour visuel à chaque ajout : bouton qui « pop », pastille compteur du jour sur le bouton, puce « auj. » colorée, toast en bas avec Annuler.
 - Fiche de saisie : jour, heure, quantité, durée, montant, détail. Modification et suppression.
 - Détail habitude : grille, stats (semaine, mois, série, record), barre d'objectif, histogramme 12 semaines, calendrier mensuel avec valeur par jour, liste des entrées du jour sélectionné.
 - Formulaire habitude : nom, description, emoji, couleur, type, unité, champs à saisir, métrique affichée, objectif min/max avec période, conséquence.

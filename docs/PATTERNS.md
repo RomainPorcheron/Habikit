@@ -58,11 +58,23 @@ function mulberry32(seed: number) {
 
 ### Tap court / appui long sur un même bouton
 
-**Fonction** : `pointerdown` arme un timer (420 ms). S'il expire → action longue (fiche détaillée). `pointerup` avant → action courte (+1).
+**Fonction** : `pointerdown` arme un timer (450 ms). S'il expire → action longue (fiche détaillée). Sinon l'action courte (+1) part sur `click`, jamais sur `pointerup`. Les habitudes qui exigent une durée ou un montant (Sport, Commandes) n'ont pas d'appui long : un tap ouvre la fiche.
 
 **Intérêt** : Un seul bouton par carte, comme HabitKit, mais deux gestes. `onContextMenu` est neutralisé pour éviter le menu Android sur appui long.
 
-**Utilisé dans ce projet** : `src/components/HabitCard.tsx`.
+**Piège évité (clic fantôme)** : sur mobile, le `click` synthétique d'une tape est ciblé sur ce qui se trouve sous le doigt *au relâchement*. Si on ouvre la fiche au `pointerup`, ce clic atterrit sur l'overlay qui vient d'apparaître et la referme aussitôt (« je clique et rien ne se passe »). Trois garde-fous : l'action sur `click` ; après un appui long, `swallowNextClick()` avale le clic suivant en phase de capture sur `document` ; l'overlay ne ferme que si le `pointerdown` a commencé sur lui (`downOnOverlay`).
+
+**Utilisé dans ce projet** : `src/components/HabitCard.tsx`, `LogSheet.tsx`, `HabitForm.tsx`.
+
+---
+
+### Retour visuel après un ajout, dérivé des données
+
+**Fonction** : `HabitCard` compare le total du jour au rendu précédent (`useRef`). S'il augmente : le bouton « pop » (Web Animations API), la carte flashe dans sa couleur, la pastille compteur sur le bouton et la puce « auj. » se remontent. `App` affiche un toast « ✓ Alcool · ajouté · +1 Bière » avec **Annuler** (supprime l'entrée) pendant 4 s.
+
+**Intérêt** : Le feedback ne dépend pas du geste (tap +1, fiche enregistrée, ajout depuis le détail) : il se déclenche dès que les entrées changent. L'annulation évite un aller-retour dans le détail en cas de double tap.
+
+**Utilisé dans ce projet** : `src/components/HabitCard.tsx`, `src/App.tsx`.
 
 ---
 

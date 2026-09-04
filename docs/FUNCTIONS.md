@@ -68,9 +68,16 @@ const streak = currentStreak(habit, own);  // 3 (jours sans, pour une habitude q
 | Composant | Props clés | Rôle |
 |---|---|---|
 | `Heatmap` | `habit, totals, cell?, gap?, weeks?` | Grille GitHub, colonnes = semaines, s'adapte à la largeur (ResizeObserver). |
-| `HabitCard` | `habit, entries, onOpen, onQuickLog, onDetailedLog` | Carte du dashboard. Tap bouton = +1 ou fiche, appui long (420 ms) = fiche. |
+| `HabitCard` | `habit, entries, onOpen, onQuickLog, onDetailedLog` | Carte du dashboard. Tap bouton = +1 (ou fiche si durée / montant à saisir), appui long (450 ms) = fiche. Pastille = nombre d'ajouts du jour, animation quand le total du jour augmente. |
 | `HabitDetail` | `habit, entries, onBack, onEdit, onAddEntry, onEditEntry, onDeleteEntry` | Écran de détail. |
 | `MonthCalendar` | `habit, month, totals, selected, onSelect, onPrev, onNext, monthTotal` | Calendrier mensuel coloré avec valeur par jour. |
 | `LogSheet` | `habit, date?, entry?, onSave, onDelete?, onClose` | Fiche de saisie / édition d'une entrée. Chips `habit.options` + « Autre… » (texte libre) → `entry.category`. |
 | `HabitForm` | `habit?, onSave, onDelete?, onClose` | Création / édition d'une habitude. Les choix se saisissent séparés par des virgules, avec un défaut et l'option « Autre ». |
 | `AlertsBanner` | `alerts, onOpen` | Bandeau d'alertes cliquables. |
+
+## src/App.tsx
+
+| Élément | Rôle |
+|---|---|
+| `describeEntry(habit, entry)` | Résumé court d'une entrée pour le toast : « +1 Bière », « Vélo · 1h30 », « 34 € · Amazon ». |
+| Toast | Après `quickLog` ou enregistrement d'une nouvelle entrée : confirmation en bas, bouton **Annuler** = `deleteEntry`, disparaît après 4 s. |
