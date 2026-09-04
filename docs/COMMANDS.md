@@ -18,6 +18,15 @@ Le serveur écoute sur toutes les interfaces (`host: true` dans vite.config.ts).
 ipconfig | findstr IPv4
 ```
 
+## Tester depuis le téléphone sans PC (GitHub Pages)
+
+Le workflow `.github/workflows/deploy.yml` builde et déploie `dist/` sur GitHub Pages à chaque push sur `main` (ou à la main via l'onglet Actions → « Run workflow »).
+
+- URL : https://romainporcheron.github.io/Habikit/
+- Pré-requis, une seule fois : GitHub → Settings → Pages → Source : **GitHub Actions**.
+- Le build Pages passe `VITE_BASE=/Habikit/` (chemin de base, manifeste et service worker suivent). En local rien ne change, la base reste `/`.
+- Depuis le téléphone : ouvrir un PR de la branche vers `main`, merger, attendre ~1 min, recharger l'URL. Comme c'est une PWA, « Ajouter à l'écran d'accueil » fonctionne aussi.
+
 ## Tester la PWA (installation, hors ligne)
 
 Le service worker n'est pas actif en dev. Pour le tester :
