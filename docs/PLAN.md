@@ -38,7 +38,13 @@ Garder l'interface et la lisibilité de HabitKit : dashboard = liste de cartes, 
 - Reset de la fake data (bouton ↺).
 
 ### À faire
-- [ ] Backend et synchronisation (voir ARCHITECTURE.md, section Backend). Romain met en place Supabase à son retour de vacances.
+- [ ] Backend et synchronisation (voir ARCHITECTURE.md, section Backend).
+  - [x] Projet Supabase `Habikit-dev` créé (2026-09-05).
+  - [x] Config d'environnement (`src/config.ts`), client Supabase, pastille d'état dans l'en-tête.
+  - [x] GitHub Pages en deux versions : `/Habikit/` (main, prod) et `/Habikit/dev/` (branche dev).
+  - [ ] Jouer `schema.sql` sur Habikit-dev, renseigner les Variables GitHub, créer la branche `dev` (procédure dans COMMANDS.md).
+  - [ ] `supabaseRepo` (lecture / écritures unitaires) + auth magic link.
+  - [ ] Projet `Habikit-prod`, promotion.
 - [ ] Authentification : un seul compte (Romain), magic link.
 - [ ] Archiver / réordonner les habitudes (drag).
 - [ ] Export / import JSON.
@@ -55,8 +61,8 @@ Garder l'interface et la lisibilité de HabitKit : dashboard = liste de cartes, 
 
 Deux environnements séparés dès le backend :
 
-- **dev** : projet Supabase « habikit-dev », `.env.development`, c'est là que je travaille et que Romain teste.
-- **prod** : projet Supabase « habikit-prod », `.env.production`, jamais modifié directement.
+- **dev** : projet Supabase « Habikit-dev », branche `dev`, https://romainporcheron.github.io/Habikit/dev/ ; c'est là que je travaille et que Romain teste.
+- **prod** : projet Supabase « Habikit-prod », branche `main`, https://romainporcheron.github.io/Habikit/ ; jamais modifié directement.
 
 La promotion dev → prod (schéma, build, déploiement) est faite par Romain une fois tout validé en dev. La procédure sera dans COMMANDS.md.
 
@@ -66,12 +72,14 @@ La promotion dev → prod (schéma, build, déploiement) est faite par Romain un
 src/
   types.ts            modèle (Habit, Entry, Goal, Alert)
   store.tsx           état global (useReducer) + persistance
+  config.ts           environnement (local/dev/prod) + variables Supabase
   data/repo.ts        interface Repo + implémentation localStorage
+  data/supabase.ts    client Supabase partagé + pingSupabase()
   data/seed.ts        fake data déterministe
   lib/dates.ts        helpers de dates (semaine = lundi)
   lib/stats.ts        totaux, objectifs, séries, niveaux de heatmap, alertes
   lib/colors.ts       palette, emojis
-  components/         Heatmap, HabitCard, HabitDetail, MonthCalendar, LogSheet, HabitForm, AlertsBanner
+  components/         Heatmap, HabitCard, HabitDetail, MonthCalendar, LogSheet, HabitForm, AlertsBanner, EnvBadge
 docs/                 PLAN, ARCHITECTURE, FUNCTIONS, COMMANDS, PATTERNS
 supabase/schema.sql   schéma backend proposé
 ```

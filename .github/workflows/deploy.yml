@@ -1,11 +1,20 @@
-# Déploie le front sur GitHub Pages à chaque push sur main.
-# Pré-requis (une seule fois) : Settings → Pages → Source : "GitHub Actions".
-# URL finale : https://romainporcheron.github.io/Habikit/
+# Déploie deux versions du front sur le même site GitHub Pages :
+#   - prod : branche `main` → https://romainporcheron.github.io/Habikit/       (Supabase « Habikit-prod »)
+#   - dev  : branche `dev`  → https://romainporcheron.github.io/Habikit/dev/   (Supabase « Habikit-dev »)
+# Un push sur l'une ou l'autre reconstruit les deux et republie le site entier.
+# Si la branche `dev` n'existe pas encore, seule la prod est publiée.
+#
+# Pré-requis (une seule fois) :
+#   - Settings → Pages → Source : "GitHub Actions".
+#   - Settings → Secrets and variables → Actions → Variables (la clé anon est publique par
+#     conception, elle finit dans le bundle ; la sécurité vient de la RLS) :
+#       SUPABASE_URL_DEV, SUPABASE_ANON_KEY_DEV, SUPABASE_URL_PROD, SUPABASE_ANON_KEY_PROD
+#     Une variable vide = pas de backend pour cet environnement (l'app reste en localStorage).
 name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   workflow_dispatch:
 
 permissions:
@@ -17,25 +26,72 @@ concurrency:
   group: pages
   cancel-in-progress: true
 
+env:
+  DEV_BRANCH: dev
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout main (prod)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: prod
+
+      - name: Checkout dev
+        id: dev
+        continue-on-error: true
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.DEV_BRANCH }}
+          path: dev
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npm run build
+
+      - name: Build prod
+        working-directory: prod
         env:
           VITE_BASE: /${{ github.event.repository.name }}/
+          VITE_APP_ENV: prod
+          VITE_SUPABASE_URL: ${{ vars.SUPABASE_URL_PROD }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY_PROD }}
+        run: |
+          npm ci
+          npm run build
+
+      - name: Build dev
+        if: steps.dev.outcome == 'success'
+        working-directory: dev
+        env:
+          VITE_BASE: /${{ github.event.repository.name }}/dev/
+          VITE_APP_ENV: dev
+          VITE_SUPABASE_URL: ${{ vars.SUPABASE_URL_DEV }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY_DEV }}
+        run: |
+          npm ci
+          npm run build
+
+      - name: Assemble site (prod à la racine, dev sous /dev/)
+        run: |
+          mkdir -p site
+          cp -r prod/dist/. site/
+          if [ -d dev/dist ]; then
+            mkdir -p site/dev
+            cp -r dev/dist/. site/dev/
+          else
+            echo "Branche ${DEV_BRANCH} absente : pas de build dev."
+          fi
+          find site -maxdepth 2 -type d
+
       - uses: actions/configure-pages@v5
         with:
           enablement: true
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: site
 
   deploy:
     needs: build

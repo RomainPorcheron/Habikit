@@ -11,6 +11,8 @@ npm run dev
 
 Ouvrir http://localhost:5173 (ou `http://<ip-du-pc>:5173` depuis le téléphone). Les données sont en `localStorage`, pré-remplies avec de la fake data. Le bouton ↺ les régénère.
 
+En ligne : prod sur https://romainporcheron.github.io/Habikit/ (branche `main`), dev sur https://romainporcheron.github.io/Habikit/dev/ (branche `dev`). Backend Supabase : voir [docs/COMMANDS.md](docs/COMMANDS.md).
+
 ## Docs
 
 - [docs/PLAN.md](docs/PLAN.md) — objectifs, fonctionnalités, étapes

@@ -1,5 +1,20 @@
 # FUNCTIONS — Habikit
 
+## src/config.ts
+
+| Export | Type | Rôle |
+|---|---|---|
+| `APP_ENV` | `'local' \| 'dev' \| 'prod'` | Environnement du build (`VITE_APP_ENV`, défaut `local`). |
+| `SUPABASE_URL` / `SUPABASE_ANON_KEY` | `string` | Lues au build, vides sans config. |
+| `HAS_SUPABASE` | `boolean` | Vrai quand les deux sont renseignées. |
+
+## src/data/supabase.ts
+
+| Fonction | Signature | Rôle |
+|---|---|---|
+| `supabase` | `SupabaseClient \| null` | Client partagé, `null` sans config (mode localStorage). |
+| `pingSupabase` | `() => Promise<{status, detail?}>` | `head` select sur `habits` : valide URL, clé et schéma sans session. `none` / `checking` / `ok` / `error`. |
+
 ## src/lib/dates.ts
 
 | Fonction | Signature | Rôle |
