@@ -52,6 +52,19 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
 }
 .topbar h1 { margin: 0; font-size: 26px; letter-spacing: -0.02em; }
 .topbar-actions { display: flex; gap: 8px; align-items: center; }
+
+/* Pastille d'environnement (dev / local) sous la date. Cachée en prod quand tout va bien. */
+.env-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  margin-top: 4px; padding: 2px 8px; border-radius: 999px;
+  font-size: 11px; line-height: 16px; color: var(--muted);
+  background: var(--card-2); border: 1px solid transparent;
+}
+.env-badge b { text-transform: uppercase; letter-spacing: 0.04em; }
+.env-badge.env-dev { border-color: var(--warning); color: var(--warning); }
+.env-badge.status-ok { color: var(--ok); }
+.env-badge.status-error { color: var(--danger); border-color: var(--danger); }
+.env-detail { margin-top: 6px; font-size: 11px; color: var(--danger); word-break: break-word; }
 .fab {
   width: 40px; height: 40px; border-radius: 12px;
   background: var(--text); color: var(--bg);

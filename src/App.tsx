@@ -9,6 +9,7 @@ import { HabitDetail } from './components/HabitDetail';
 import { LogSheet } from './components/LogSheet';
 import { HabitForm } from './components/HabitForm';
 import { AlertsBanner } from './components/AlertsBanner';
+import { EnvBadge } from './components/EnvBadge';
 
 type Screen = { name: 'dashboard' } | { name: 'detail'; habitId: string };
 type Sheet = { habitId: string; date?: string; entry?: Entry } | null;
@@ -78,6 +79,7 @@ export default function App() {
             <div>
               <h1>Habikit</h1>
               <span className="muted small">{formatLong(today())}</span>
+              <EnvBadge />
             </div>
             <div className="topbar-actions">
               <button className="ghost" title="Recharger la fake data" onClick={() => { if (confirm('Remplacer toutes les données par la fake data ?')) void actions.reset(); }}>↺</button>

@@ -53,11 +53,17 @@ Brancher un backend = fournir une autre implémentation de `Repo` (voir ci-desso
 
 Toutes les périodes hebdomadaires commencent le lundi (`lib/dates.startOfWeek`). Les clés de jour sont en heure locale (`YYYY-MM-DD`) pour éviter les décalages UTC à minuit.
 
-## Backend (proposé)
+## Environnements et configuration
 
-Supabase, deux projets (dev et prod, voir PLAN.md), deux tables (`habits`, `entries`) + RLS `user_id = auth.uid()`. Schéma dans `supabase/schema.sql`.
+`src/config.ts` lit les variables `VITE_*` au build et expose `APP_ENV` (`local` | `dev` | `prod`), `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `HAS_SUPABASE`. `src/data/supabase.ts` crée le client partagé (`null` sans config) et `pingSupabase()` vérifie URL + clé + schéma. `EnvBadge` affiche le résultat dans l'en-tête.
 
-Implémentation prévue : `src/data/supabaseRepo.ts`
+Un seul site GitHub Pages héberge les deux environnements : prod à `/Habikit/` (branche `main`), dev à `/Habikit/dev/` (branche `dev`). Chacun a sa base, son manifeste (« Habikit DEV ») et son service worker ; celui de prod exclut `/Habikit/dev/` de son fallback de navigation pour ne pas capter l'autre app. Détail dans COMMANDS.md.
+
+## Backend (en cours)
+
+Supabase, deux projets (`Habikit-dev` créé le 2026-09-05, `Habikit-prod` à créer), deux tables (`habits`, `entries`) + RLS `user_id = auth.uid()`. Schéma dans `supabase/schema.sql`. Client : `src/data/supabase.ts`.
+
+Prochaine étape : `src/data/supabaseRepo.ts`
 - `load()` : select habits + entries des 13 derniers mois (la grille n'affiche pas plus), reste à la demande.
 - Écritures unitaires (`upsert` par entrée) plutôt que `save(snapshot)` complet : le store passera à des actions asynchrones avec mise à jour optimiste.
 - Offline : file d'attente des écritures en localStorage, rejouée à la reconnexion (phase 2).
