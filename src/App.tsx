@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { Entry, Habit } from './types';
 import { useStore } from './store';
+import { useAuth } from './auth';
 import { formatLong, toKey, today } from './lib/dates';
 import { alertsFor, entriesOf, formatValue } from './lib/stats';
 import { PALETTE } from './lib/colors';
@@ -35,7 +36,8 @@ function describeEntry(habit: Habit, e: Entry): string {
 }
 
 export default function App() {
-  const { state, actions } = useStore();
+  const { state, actions, demo, syncError, dismissSyncError } = useStore();
+  const auth = useAuth();
   const [screen, setScreen] = useState<Screen>({ name: 'dashboard' });
   const [sheet, setSheet] = useState<Sheet>(null);
   const [form, setForm] = useState<Form>(null);
@@ -52,6 +54,18 @@ export default function App() {
   const alerts = useMemo(() => alertsFor(habits, state.entries), [habits, state.entries]);
 
   if (!state.loaded) return <div className="app"><p className="muted">Chargement…</p></div>;
+  if (state.loadError) {
+    return (
+      <div className="app">
+        <div className="empty">
+          <p>Impossible de charger les données.</p>
+          <p className="small">{state.loadError}</p>
+          <button className="btn primary" onClick={() => void actions.reload()}>Réessayer</button>
+          {!auth.local && <button className="btn secondary" onClick={() => void auth.signOut()}>Se déconnecter</button>}
+        </div>
+      </div>
+    );
+  }
 
   const confirmAdded = (habit: Habit, entry: Entry) => setToast({ id: Date.now(), habit, entry });
 
@@ -82,11 +96,28 @@ export default function App() {
               <EnvBadge />
             </div>
             <div className="topbar-actions">
-              <button className="ghost" title="Recharger la fake data" onClick={() => { if (confirm('Remplacer toutes les données par la fake data ?')) void actions.reset(); }}>↺</button>
+              <button
+                className="ghost"
+                title={demo ? 'Recharger la fake data' : 'Recréer les habitudes de départ manquantes'}
+                onClick={() => {
+                  const msg = demo ? 'Remplacer toutes les données par la fake data ?' : 'Recréer les habitudes de départ qui manquent (Alcool, Sport, Commandes, Doliprane, Tâches) ?';
+                  if (confirm(msg)) void actions.reset();
+                }}
+              >↺</button>
+              {!auth.local && (
+                <button className="ghost" title="Se déconnecter" onClick={() => { if (confirm('Se déconnecter ?')) void auth.signOut(); }}>⏻</button>
+              )}
               <button className="fab" onClick={() => setForm({})} aria-label="Nouvelle habitude">+</button>
             </div>
           </header>
 
+          {syncError && (
+            <div className="sync-error" role="alert">
+              <span>Sauvegarde échouée · {syncError}</span>
+              <button className="btn secondary" onClick={() => { dismissSyncError(); void actions.reload(); }}>Recharger</button>
+              <button className="ghost" aria-label="Fermer" onClick={dismissSyncError}>×</button>
+            </div>
+          )}
           <AlertsBanner alerts={alerts} onOpen={(habitId) => setScreen({ name: 'detail', habitId })} />
 
           <main className="cards">

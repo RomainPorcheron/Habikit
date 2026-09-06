@@ -42,10 +42,12 @@ Garder l'interface et la lisibilité de HabitKit : dashboard = liste de cartes, 
   - [x] Projet Supabase `Habikit-dev` créé (2026-09-05).
   - [x] Config d'environnement (`src/config.ts`), client Supabase, pastille d'état dans l'en-tête.
   - [x] GitHub Pages en deux versions : `/Habikit/` (main, prod) et `/Habikit/dev/` (branche dev).
-  - [ ] Jouer `schema.sql` sur Habikit-dev, renseigner les Variables GitHub, créer la branche `dev` (procédure dans COMMANDS.md).
-  - [ ] `supabaseRepo` (lecture / écritures unitaires) + auth magic link.
+  - [x] `schema.sql` joué sur Habikit-dev, Variables GitHub renseignées, branche `dev` créée (2026-09-05, pastille `dev · Supabase OK`).
+  - [x] `supabaseRepo` (lecture 13 mois, écritures unitaires optimistes) + auth magic link + habitudes de départ créées au premier login.
+  - [ ] Valider en dev depuis le téléphone : login, saisie, édition, suppression, rechargement.
+  - [ ] Offline : file d'attente des écritures (phase 2).
   - [ ] Projet `Habikit-prod`, promotion.
-- [ ] Authentification : un seul compte (Romain), magic link.
+- [x] Authentification : un seul compte (Romain), magic link (`src/auth.tsx`, `components/Login.tsx`).
 - [ ] Archiver / réordonner les habitudes (drag).
 - [ ] Export / import JSON.
 - [ ] Vue compacte et vue « checklist » comme HabitKit (optionnel).
@@ -71,15 +73,17 @@ La promotion dev → prod (schéma, build, déploiement) est faite par Romain un
 ```
 src/
   types.ts            modèle (Habit, Entry, Goal, Alert)
-  store.tsx           état global (useReducer) + persistance
+  auth.tsx            session Supabase, AuthGate (écran de connexion), signOut
+  store.tsx           état global (useReducer), écritures optimistes via Repo
   config.ts           environnement (local/dev/prod) + variables Supabase
   data/repo.ts        interface Repo + implémentation localStorage
   data/supabase.ts    client Supabase partagé + pingSupabase()
+  data/supabaseRepo.ts Repo Supabase : mapping lignes SQL ↔ Habit/Entry, habitudes de départ
   data/seed.ts        fake data déterministe
   lib/dates.ts        helpers de dates (semaine = lundi)
   lib/stats.ts        totaux, objectifs, séries, niveaux de heatmap, alertes
   lib/colors.ts       palette, emojis
-  components/         Heatmap, HabitCard, HabitDetail, MonthCalendar, LogSheet, HabitForm, AlertsBanner, EnvBadge
+  components/         Heatmap, HabitCard, HabitDetail, MonthCalendar, LogSheet, HabitForm, AlertsBanner, EnvBadge, Login
 docs/                 PLAN, ARCHITECTURE, FUNCTIONS, COMMANDS, PATTERNS
 supabase/schema.sql   schéma backend proposé
 ```
@@ -88,7 +92,7 @@ supabase/schema.sql   schéma backend proposé
 
 1. ✅ Prototype front avec fake data.
 2. Valider le PLAN et les réponses aux questions ouvertes.
-3. Mise en place backend (Supabase) par Romain, implémentation `supabaseRepo` + auth.
+3. ✅ Mise en place backend (Supabase dev) par Romain, implémentation `supabaseRepo` + auth. Reste : validation en dev, puis prod.
 4. ✅ PWA installable.
 5. Polish : archivage, réordonnancement, export.
 

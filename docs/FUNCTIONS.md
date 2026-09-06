@@ -15,6 +15,35 @@
 | `supabase` | `SupabaseClient \| null` | Client partagé, `null` sans config (mode localStorage). |
 | `pingSupabase` | `() => Promise<{status, detail?}>` | `head` select sur `habits` : valide URL, clé et schéma sans session. `none` / `checking` / `ok` / `error`. |
 
+## src/data/repo.ts
+
+| Export | Signature | Rôle |
+|---|---|---|
+| `Repo` | interface | `demo`, `load`, `upsertHabit`, `deleteHabit`, `upsertEntry`, `deleteEntry`, `reset`. |
+| `localRepo` | `Repo` | localStorage (`habikit:v2`) + fake data. Garde le snapshot en mémoire, réécrit tout à chaque opération. |
+| `newId` | `() => string` | uuid v4 (`crypto.randomUUID`, repli maison). |
+
+## src/data/supabaseRepo.ts
+
+| Export | Signature | Rôle |
+|---|---|---|
+| `supabaseRepo` | `Repo` | Lecture 13 mois, upsert / delete par ligne, habitudes de départ au premier login. |
+| `forgetUser` | `() => void` | Oublie le `user_id` mis en cache (appelé à la déconnexion). |
+
+## src/auth.tsx
+
+| Export | Signature | Rôle |
+|---|---|---|
+| `AuthProvider` | composant | Écoute `onAuthStateChange`, nettoie l'URL après le magic link. |
+| `useAuth` | `() => { loading, session, local, signOut }` | `local` = pas de backend configuré. |
+| `AuthGate` | composant | Rend `Login` tant qu'il n'y a pas de session (avec backend). |
+
+## src/store.tsx
+
+| Export | Signature | Rôle |
+|---|---|---|
+| `useStore` | `() => { state, actions, demo, syncError, dismissSyncError }` | `actions.*` : dispatch optimiste puis écriture `Repo`. `reload()` rejoue `load()`. |
+
 ## src/lib/dates.ts
 
 | Fonction | Signature | Rôle |

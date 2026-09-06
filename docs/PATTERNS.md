@@ -4,18 +4,32 @@
 
 **Fonction** : Les composants ne savent pas d'où viennent les données. `Repo` expose `load / save / reset` ; `localRepo` est l'implémentation actuelle.
 
-**Intérêt** : Brancher Supabase (ou autre) sans toucher à l'UI. Permet aussi de garder un mode « démo / offline ». Trade-off : `save(snapshot)` complet est simple mais ne convient pas à un backend ; on passera à des écritures unitaires.
+**Intérêt** : Brancher Supabase sans toucher à l'UI, et garder un mode « démo » (localStorage) quand aucun backend n'est configuré. Les écritures sont unitaires (une ligne à la fois), ce qui colle aux tables SQL et prépare la file d'attente hors ligne.
 
 **Exemple** :
 ```ts
 export interface Repo {
+  readonly demo: boolean;
   load(): Promise<Snapshot>;
-  save(snapshot: Snapshot): Promise<void>;
+  upsertHabit(h: Habit): Promise<void>;
+  deleteHabit(id: string): Promise<void>;
+  upsertEntry(e: Entry): Promise<void>;
+  deleteEntry(id: string): Promise<void>;
   reset(): Promise<Snapshot>;
 }
 ```
 
-**Utilisé dans ce projet** : `src/data/repo.ts`, consommé par `src/store.tsx`.
+**Utilisé dans ce projet** : `src/data/repo.ts` (`localRepo`), `src/data/supabaseRepo.ts`, consommés par `src/store.tsx`.
+
+---
+
+### Mise à jour optimiste
+
+**Fonction** : Chaque action du store modifie l'état en mémoire immédiatement, puis lance l'écriture backend sans l'attendre. Si elle échoue, l'erreur est stockée dans `syncError` et affichée dans un bandeau avec un bouton Recharger.
+
+**Intérêt** : Le +1 reste instantané sur mobile, même en 3G. L'UI ne dépend jamais de la latence réseau. Trade-off : entre l'échec et le rechargement, l'écran montre un état que le serveur n'a pas ; acceptable pour un seul utilisateur, et la phase 2 (file d'attente) le résoudra.
+
+**Utilisé dans ce projet** : `src/store.tsx` (`persist()`), bandeau `.sync-error` dans `App.tsx`.
 
 ---
 

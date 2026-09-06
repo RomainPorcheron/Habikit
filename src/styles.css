@@ -65,6 +65,27 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
 .env-badge.status-ok { color: var(--ok); }
 .env-badge.status-error { color: var(--danger); border-color: var(--danger); }
 .env-detail { margin-top: 6px; font-size: 11px; color: var(--danger); word-break: break-word; }
+
+/* Écriture backend échouée : bandeau au-dessus des alertes, l'UI reste utilisable. */
+.sync-error {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  margin-bottom: 12px; padding: 10px 12px; border-radius: 12px;
+  background: #ef44441f; border: 1px solid #ef444466; font-size: 13px;
+}
+.sync-error > span { flex: 1; min-width: 160px; word-break: break-word; }
+
+/* Connexion (magic link). */
+.login-card {
+  display: flex; flex-direction: column; gap: 12px;
+  margin-top: 24px; padding: 18px; border-radius: 18px;
+  background: var(--card); border: 1px solid var(--border);
+}
+.login-title { margin: 0; font-size: 18px; font-weight: 700; }
+.login-error { margin: 0; color: var(--danger); font-size: 13px; }
+.login .field input[type='email'] {
+  background: var(--card-2); border: 1px solid var(--border); border-radius: 12px;
+  padding: 12px; width: 100%; outline: none; font-size: 16px;
+}
 .fab {
   width: 40px; height: 40px; border-radius: 12px;
   background: var(--text); color: var(--bg);
