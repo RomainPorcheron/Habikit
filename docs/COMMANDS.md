@@ -53,11 +53,11 @@ Pour travailler en local, copier `.env.example` en `.env.development` et y mettr
 ## Se connecter (magic link)
 
 1. Ouvrir `/Habikit/dev/` → écran « Connexion » → saisir l'email → « Recevoir le lien ».
-2. Ouvrir le lien reçu **sur le même téléphone, dans le même navigateur** (flux PKCE : le secret est dans le navigateur qui a demandé le lien). L'app s'ouvre connectée.
+2. Ouvrir le lien reçu. La session est stockée **dans le navigateur qui ouvre le lien** : depuis l'appli mail, faire un appui long → « Ouvrir dans Chrome » (sinon on est connecté dans la WebView du mail, et Chrome redemande l'email). Installer ensuite la PWA depuis Chrome pour garder cette session.
 3. Premier login : les cinq habitudes du brief sont créées, vides. Le bouton ↺ ne charge plus de fake data, il recrée seulement les habitudes de départ manquantes.
 4. Déconnexion : bouton ⏻ en haut à droite.
 
-Limites Supabase par défaut (SMTP intégré) : 2 emails de magic link par heure, et le lien expire au bout d'une heure. Suffisant pour un seul utilisateur ; sinon brancher un SMTP perso dans Authentication → SMTP Settings.
+Le lien est à usage unique et expire au bout d'une heure. Une fois connecté, la session se renouvelle toute seule (jeton d'accès 1 h + jeton de rafraîchissement) jusqu'à la déconnexion (⏻). Limites Supabase par défaut (SMTP intégré) : 2 emails de magic link par heure. Suffisant pour un seul utilisateur ; sinon brancher un SMTP perso dans Authentication → SMTP Settings.
 
 Une écriture qui échoue (réseau coupé, session expirée…) affiche un bandeau rouge « Sauvegarde échouée ». « Recharger » remet l'app dans l'état du serveur.
 

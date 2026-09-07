@@ -76,7 +76,7 @@ Deux projets (`Habikit-dev`, `Habikit-prod` à créer), deux tables (`habits`, `
 - `reset()` : recrée seulement les habitudes de départ manquantes (comparaison par nom), jamais de fake data en base.
 - Mapping camelCase ↔ snake_case dans le même fichier (`toHabit` / `fromHabit`, `toEntry` / `fromEntry`). `order` ↔ `position`, `createdAt` ↔ `created_at`.
 
-Auth : magic link (`signInWithOtp`, flux PKCE). Le lien doit être ouvert sur le même appareil et le même navigateur que la demande. `emailRedirectTo` = origine + `BASE_URL`, donc `/Habikit/dev/` en dev et `/Habikit/` en prod ; ces URL doivent être dans la liste Redirect URLs du projet Supabase.
+Auth : magic link (`signInWithOtp`, flux implicite par défaut de supabase-js). Supabase consomme le jeton du mail puis redirige vers `emailRedirectTo` (origine + `BASE_URL`, donc `/Habikit/dev/` en dev et `/Habikit/` en prod ; à déclarer dans Redirect URLs du projet) avec les jetons dans le fragment `#…` de l'URL, jamais envoyé au serveur Pages. Le client les range en localStorage et l'app nettoie l'URL. La session vit dans le navigateur qui a ouvert le lien ; sans session, la RLS ne rend aucune ligne, clé publishable ou pas.
 
 Offline : pas encore. En attendant, une écriture sans réseau affiche le bandeau d'erreur, l'UI reste à jour localement jusqu'au prochain rechargement. Phase 2 : file d'attente en localStorage rejouée à la reconnexion.
 

@@ -4,7 +4,8 @@ import { EnvBadge } from './EnvBadge';
 
 /**
  * Connexion par magic link : on saisit l'email, Supabase envoie un lien, le lien ouvre l'app connectée.
- * Le lien doit être ouvert sur le même appareil et le même navigateur que la demande (flux PKCE).
+ * Flux implicite : le lien fonctionne dans n'importe quel navigateur, et la session est stockée
+ * dans le navigateur qui l'a ouvert (localStorage). Pour être connecté dans Chrome, ouvrir le lien dans Chrome.
  */
 export function Login() {
   const [email, setEmail] = useState('');
@@ -39,7 +40,7 @@ export function Login() {
       {state === 'sent' ? (
         <div className="login-card">
           <p className="login-title">Lien envoyé à <b>{email}</b>.</p>
-          <p className="muted">Ouvre-le depuis ce téléphone, avec ce navigateur. Pense au dossier spam si rien n'arrive.</p>
+          <p className="muted">Tu seras connecté dans le navigateur qui ouvre le lien : depuis le mail, appui long → « Ouvrir dans Chrome » pour rester dans Chrome. Pense au dossier spam si rien n'arrive.</p>
           <button className="btn secondary" onClick={() => setState('idle')}>Changer d'adresse</button>
         </div>
       ) : (
