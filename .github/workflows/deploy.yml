@@ -102,3 +102,23 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+        env:
+          # deploy-pages identifie chaque déploiement Pages par GITHUB_SHA. Quand main et dev
+          # pointent sur le même commit, GitHub garde le premier déploiement et ignore les
+          # suivants (site publié sans /dev/, variables pas prises en compte…). On rend donc
+          # l'identifiant unique par exécution.
+          GITHUB_SHA: ${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Vérifier les URLs publiées
+        run: |
+          base="${{ steps.deployment.outputs.page_url }}"
+          for path in "" "dev/" "dev/manifest.webmanifest"; do
+            url="${base}${path}"
+            for i in 1 2 3 4 5 6; do
+              code=$(curl -s -o /dev/null -w "%{http_code}" -H "Cache-Control: no-cache" "$url")
+              [ "$code" = "200" ] && break
+              sleep 10
+            done
+            echo "$code  $url"
+            [ "$code" = "200" ] || echo "::warning::$url répond $code"
+          done

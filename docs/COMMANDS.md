@@ -31,6 +31,7 @@ Le workflow `.github/workflows/deploy.yml` publie **deux versions** de l'app sur
 - La branche `dev` doit exister (GitHub → menu des branches → taper `dev` → « Create branch dev from main »). Tant qu'elle n'existe pas, seule la prod est publiée.
 - Les deux builds sont distincts : `VITE_BASE`, `VITE_APP_ENV` et les variables Supabase changent, le manifeste aussi (« Habikit DEV », couleur de barre différente). On peut installer les deux PWA côte à côte sur l'écran d'accueil.
 - Une pastille sous la date indique l'environnement et l'état du backend (`dev · Supabase OK`). En prod elle n'apparaît qu'en cas de problème. Tap dessus = revérifier + afficher l'erreur.
+- Piège connu : GitHub identifie chaque déploiement Pages par le commit. Si `main` et `dev` sont sur le même commit (ex. juste après la création de `dev`), sans correctif le second déploiement serait ignoré. Le workflow rend donc l'identifiant unique par exécution (`GITHUB_SHA` surchargé dans le job deploy). Le job deploy affiche aussi le code HTTP de `/Habikit/`, `/Habikit/dev/` et du manifeste dev : 200 attendu partout.
 - Workflow de test depuis le téléphone : l'IA pousse sa branche → PR vers `dev` → merger → attendre ~1 min → ouvrir `/Habikit/dev/`. Une fois validé : PR `dev` → `main`.
 
 ## Brancher Supabase (à faire depuis le téléphone, une fois par projet)
