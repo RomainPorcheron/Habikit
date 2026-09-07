@@ -9,7 +9,7 @@ npm install
 npm run dev
 ```
 
-Ouvrir http://localhost:5173 (ou `http://<ip-du-pc>:5173` depuis le téléphone). Les données sont en `localStorage`, pré-remplies avec de la fake data. Le bouton ↺ les régénère.
+Ouvrir http://localhost:5173 (ou `http://<ip-du-pc>:5173` depuis le téléphone). Les données sont en `localStorage`, pré-remplies avec de la fake data. Le bouton ↺ les régénère, ⤓ exporte en JSON, ⤒ importe un export Habikit ou HabitKit (voir [docs/IMPORT_HABITKIT.md](docs/IMPORT_HABITKIT.md) pour récupérer ses données HabitKit sans le Pro).
 
 En ligne : prod sur https://romainporcheron.github.io/Habikit/ (branche `main`), dev sur https://romainporcheron.github.io/Habikit/dev/ (branche `dev`). Backend Supabase : voir [docs/COMMANDS.md](docs/COMMANDS.md).
 
@@ -20,4 +20,5 @@ En ligne : prod sur https://romainporcheron.github.io/Habikit/ (branche `main`),
 - [docs/FUNCTIONS.md](docs/FUNCTIONS.md) — fonctions clés
 - [docs/COMMANDS.md](docs/COMMANDS.md) — commandes
 - [docs/PATTERNS.md](docs/PATTERNS.md) — patterns utilisés
+- [docs/IMPORT_HABITKIT.md](docs/IMPORT_HABITKIT.md) — récupérer ses données HabitKit
 - [supabase/schema.sql](supabase/schema.sql) — schéma backend proposé

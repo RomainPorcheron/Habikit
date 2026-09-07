@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, type ReactNode } from 'react';
 import type { Entry, Habit } from './types';
 import { localRepo, newId, type Snapshot } from './data/repo';
+import { mergeSnapshots } from './data/transfer';
 
 type State = Snapshot & { loaded: boolean };
 
@@ -11,7 +12,8 @@ type Action =
   | { type: 'deleteHabit'; id: string }
   | { type: 'addEntry'; entry: Entry }
   | { type: 'updateEntry'; id: string; patch: Partial<Entry> }
-  | { type: 'deleteEntry'; id: string };
+  | { type: 'deleteEntry'; id: string }
+  | { type: 'merge'; snapshot: Snapshot };
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
@@ -33,6 +35,8 @@ function reducer(state: State, action: Action): State {
       return { ...state, entries: state.entries.map((e) => (e.id === action.id ? { ...e, ...action.patch } : e)) };
     case 'deleteEntry':
       return { ...state, entries: state.entries.filter((e) => e.id !== action.id) };
+    case 'merge':
+      return { ...state, ...mergeSnapshots(state, action.snapshot) };
   }
 }
 
@@ -43,6 +47,8 @@ export interface Actions {
   addEntry(e: Omit<Entry, 'id'>): Entry;
   updateEntry(id: string, patch: Partial<Entry>): void;
   deleteEntry(id: string): void;
+  /** Import : remplace les habitudes / entrées de même id, ajoute les autres. */
+  merge(snapshot: Snapshot): void;
   reset(): Promise<void>;
 }
 
@@ -94,6 +100,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       },
       deleteEntry(id) {
         dispatch({ type: 'deleteEntry', id });
+      },
+      merge(snapshot) {
+        dispatch({ type: 'merge', snapshot });
       },
       reset,
     }),

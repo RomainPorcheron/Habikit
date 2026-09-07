@@ -10,6 +10,17 @@ npm run build        # build de prod dans dist/
 npm run preview      # sert dist/ en local
 ```
 
+## Récupérer ses données HabitKit
+
+Procédure complète dans [IMPORT_HABITKIT.md](IMPORT_HABITKIT.md). Résumé :
+
+```bash
+python scripts/habitkit_backup_to_json.py --backup "<sauvegarde iPhone non chiffrée>" --out habitkit-db/   # extrait la base + JSON
+python scripts/habitkit_backup_to_json.py --db habitkit.db --out habitkit-export.json                    # base SQLite → JSON
+```
+
+Puis bouton ⤒ dans l'en-tête de l'app pour importer le JSON (export HabitKit ou Habikit).
+
 ## Tester sur le téléphone
 
 Le serveur écoute sur toutes les interfaces (`host: true` dans vite.config.ts). Sur le téléphone, ouvrir `http://<ip-du-pc>:5173`. Trouver l'IP :

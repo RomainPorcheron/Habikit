@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Entry, Habit } from './types';
 import { useStore } from './store';
 import { formatLong, toKey, today } from './lib/dates';
@@ -10,6 +10,7 @@ import { LogSheet } from './components/LogSheet';
 import { HabitForm } from './components/HabitForm';
 import { AlertsBanner } from './components/AlertsBanner';
 import { EnvBadge } from './components/EnvBadge';
+import { downloadText, exportFileName, parseImport, serializeSnapshot } from './data/transfer';
 
 type Screen = { name: 'dashboard' } | { name: 'detail'; habitId: string };
 type Sheet = { habitId: string; date?: string; entry?: Entry } | null;
@@ -40,6 +41,7 @@ export default function App() {
   const [sheet, setSheet] = useState<Sheet>(null);
   const [form, setForm] = useState<Form>(null);
   const [toast, setToast] = useState<Toast>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
 
   // Le toast disparaît seul ; un nouvel ajout remplace le précédent et relance le compte à rebours.
   useEffect(() => {
@@ -68,6 +70,26 @@ export default function App() {
     setToast(null);
   };
 
+  const exportJson = () => downloadText(exportFileName(), serializeSnapshot({ habits: state.habits, entries: state.entries }));
+
+  /** Import d'un export Habikit ou HabitKit (fusion : même id = remplacé, sinon ajouté). */
+  const importJson = async (file: File | undefined) => {
+    if (!file) return;
+    try {
+      const result = parseImport(await file.text(), { firstOrder: state.habits.length });
+      const src = result.source === 'habitkit' ? 'HabitKit' : 'Habikit';
+      const lines = [
+        `Importer depuis ${src} : ${result.habits.length} habitude(s), ${result.entries.length} entrée(s).`,
+        result.archived ? `${result.archived} archivée(s), masquée(s) du dashboard.` : '',
+        result.skipped ? `${result.skipped} entrée(s) ignorée(s) (habitude inconnue ou date illisible).` : '',
+        'Les habitudes déjà importées avec le même fichier sont remplacées, le reste est conservé.',
+      ].filter(Boolean);
+      if (confirm(lines.join('\n'))) actions.merge(result);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : String(err));
+    }
+  };
+
   const sheetHabit = sheet ? state.habits.find((h) => h.id === sheet.habitId) : undefined;
   const formHabit = form?.habitId ? state.habits.find((h) => h.id === form.habitId) : undefined;
 
@@ -82,6 +104,9 @@ export default function App() {
               <EnvBadge />
             </div>
             <div className="topbar-actions">
+              <input ref={fileInput} type="file" accept="application/json,.json" hidden onChange={(e) => { void importJson(e.target.files?.[0]); e.target.value = ''; }} />
+              <button className="ghost" title="Importer un export JSON (Habikit ou HabitKit)" aria-label="Importer" onClick={() => fileInput.current?.click()}>⤒</button>
+              <button className="ghost" title="Exporter les données en JSON" aria-label="Exporter" onClick={exportJson}>⤓</button>
               <button className="ghost" title="Recharger la fake data" onClick={() => { if (confirm('Remplacer toutes les données par la fake data ?')) void actions.reset(); }}>↺</button>
               <button className="fab" onClick={() => setForm({})} aria-label="Nouvelle habitude">+</button>
             </div>

@@ -15,6 +15,22 @@
 | `supabase` | `SupabaseClient \| null` | Client partagé, `null` sans config (mode localStorage). |
 | `pingSupabase` | `() => Promise<{status, detail?}>` | `head` select sur `habits` : valide URL, clé et schéma sans session. `none` / `checking` / `ok` / `error`. |
 
+## src/data/transfer.ts
+
+| Fonction | Signature | Rôle |
+|---|---|---|
+| `serializeSnapshot` | `(snapshot) => string` | JSON d'export Habikit (`{ app: 'habikit', version, exportedAt, habits, entries }`). |
+| `parseImport` | `(text, { firstOrder? }) => ImportResult` | Détecte export Habikit ou HabitKit, renvoie `{ source, habits, entries, archived, skipped }`. Erreur lisible sinon. |
+| `mergeSnapshots` | `(current, incoming) => Snapshot` | Fusion par id : remplace les mêmes ids, ajoute le reste. Utilisée par l'action `merge` du store. |
+| `downloadText` / `exportFileName` | | Téléchargement navigateur, nom `habikit-YYYYMMDD-HHMM.json`. |
+
+## src/data/importHabitKit.ts
+
+| Fonction | Signature | Rôle |
+|---|---|---|
+| `isHabitKitExport` | `(data) => boolean` | `habits[]` + (`completions[]` ou `intervals[]` ou clés `iconName` / `orderIndex`). |
+| `importHabitKit` | `(data, { firstOrder? }) => HabitKitImport` | Habitudes (`hk_<id>`, build / count, objectif min N / jour, couleur au plus proche, emoji deviné) + entrées (`hke_<id>_<jour>`, jour local = `date + timezoneOffsetInMinutes`, `count = amountOfCompletions`). |
+
 ## src/lib/dates.ts
 
 | Fonction | Signature | Rôle |

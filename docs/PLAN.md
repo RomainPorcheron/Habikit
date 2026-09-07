@@ -47,7 +47,7 @@ Garder l'interface et la lisibilité de HabitKit : dashboard = liste de cartes, 
   - [ ] Projet `Habikit-prod`, promotion.
 - [ ] Authentification : un seul compte (Romain), magic link.
 - [ ] Archiver / réordonner les habitudes (drag).
-- [ ] Export / import JSON.
+- [x] Export / import JSON (⤓ / ⤒ dans l'en-tête). L'import accepte aussi l'export HabitKit : voir [IMPORT_HABITKIT.md](IMPORT_HABITKIT.md) pour récupérer ses données sans le Pro.
 - [ ] Vue compacte et vue « checklist » comme HabitKit (optionnel).
 - [ ] Widget écran d'accueil : impossible en PWA, seulement si passage en app native (Expo).
 
@@ -76,11 +76,14 @@ src/
   data/repo.ts        interface Repo + implémentation localStorage
   data/supabase.ts    client Supabase partagé + pingSupabase()
   data/seed.ts        fake data déterministe
+  data/transfer.ts    export JSON, import (Habikit ou HabitKit), fusion
+  data/importHabitKit.ts  export HabitKit → modèle Habikit
   lib/dates.ts        helpers de dates (semaine = lundi)
   lib/stats.ts        totaux, objectifs, séries, niveaux de heatmap, alertes
   lib/colors.ts       palette, emojis
   components/         Heatmap, HabitCard, HabitDetail, MonthCalendar, LogSheet, HabitForm, AlertsBanner, EnvBadge
-docs/                 PLAN, ARCHITECTURE, FUNCTIONS, COMMANDS, PATTERNS
+docs/                 PLAN, ARCHITECTURE, FUNCTIONS, COMMANDS, PATTERNS, IMPORT_HABITKIT
+scripts/              habitkit_backup_to_json.py : base SQLite HabitKit → JSON importable
 supabase/schema.sql   schéma backend proposé
 ```
 
