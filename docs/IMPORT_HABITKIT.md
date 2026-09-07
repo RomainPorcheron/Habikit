@@ -55,9 +55,9 @@ Le dossier `/data/data/com.roehl.habitkit/` n'est pas lisible sans root, et `adb
 2. **Téléphone rooté** : `adb pull` direct du même dossier.
 3. **Migration téléphone → téléphone** (Android 12+, câble ou sans fil) vers un appareil rooté : même résultat.
 
-### Voie 3 — Lire les grilles partagées
+### Voie 3 — Lire les grilles sur des captures d'écran (fait le 2026-09-07)
 
-HabitKit sait partager une grille en image. Un script qui détecte les cases colorées peut reconstruire les jours (pas les compteurs exacts). À garder pour un historique court, saisie manuelle ensuite dans Habikit (fiche jour par jour dans le détail).
+Deux captures par habitude du détail HabitKit (grille scrollée vers le passé, puis vers le présent) suffisent : `scripts/screenshots/` détecte les cases cochées, cale les colonnes sur les libellés de mois (semaine du lundi) et produit un HTML de validation, le JSON pour ⤒ et le SQL Supabase. Détail dans [scripts/screenshots/README.md](../scripts/screenshots/README.md). Limite : un jour coché = une entrée `count 1`, pas de compteur ni de détail. Les données extraites restent hors du dépôt (public).
 
 ### Voie 4 — Un mois de Pro (1,99 $)
 
