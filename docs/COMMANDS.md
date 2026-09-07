@@ -39,7 +39,7 @@ Le workflow `.github/workflows/deploy.yml` publie **deux versions** de l'app sur
 Pour `Habikit-dev` d'abord, puis `Habikit-prod` plus tard avec les variables `*_PROD`.
 
 1. **Schéma** : Supabase → SQL Editor → New query → coller le contenu de [supabase/schema.sql](../supabase/schema.sql) (sur GitHub, ouvrir le fichier → « Raw » → tout sélectionner / copier) → Run. Résultat attendu : « Success. No rows returned ».
-2. **Auth** : Authentication → Providers → Email : activé (magic link, pas besoin de mot de passe). Authentication → URL Configuration :
+2. **Auth** : Authentication → Providers → Email : activé. Authentication → URL Configuration :
    - Site URL : `https://romainporcheron.github.io/Habikit/dev/`
    - Redirect URLs : ajouter `https://romainporcheron.github.io/Habikit/dev/**` et `http://localhost:5173/**`
 3. **Clés** : Project Settings → API (ou « API Keys ») : copier **Project URL** et la clé **anon / publishable** (`sb_publishable_…` ou `eyJ…` selon l'âge du projet, les deux marchent).
@@ -49,6 +49,24 @@ Pour `Habikit-dev` d'abord, puis `Habikit-prod` plus tard avec les variables `*_
 5. Relancer le déploiement (Actions → Deploy to GitHub Pages → Run workflow) ou pousser sur `dev`. Sur `/Habikit/dev/`, la pastille doit afficher `dev · Supabase OK`. `Supabase KO` + message = URL / clé fausse ou schéma non joué.
 
 Pour travailler en local, copier `.env.example` en `.env.development` et y mettre les mêmes valeurs.
+
+## Se connecter (email + mot de passe)
+
+Un seul compte, créé à la main dans Supabase. Pas d'inscription depuis l'app.
+
+Une fois par projet Supabase (dev, puis prod) :
+1. Authentication → **Users** → Add user → Create new user : email + mot de passe, cocher **Auto Confirm User**.
+2. Authentication → **Sign In / Providers** → Email : laisser activé. Désactiver **Allow new users to sign up** (personne d'autre ne peut créer de compte).
+3. Authentication → URL Configuration : `https://romainporcheron.github.io/Habikit/dev/**` dans Redirect URLs (déjà fait ; sert au lien « mot de passe oublié »).
+
+Dans l'app :
+- Écran « Connexion » : email + mot de passe → « Se connecter ». La session reste ouverte dans ce navigateur (jeton renouvelé automatiquement) jusqu'au bouton ⏻.
+- Premier login : les cinq habitudes du brief sont créées, vides. Le bouton ↺ recrée seulement les habitudes de départ manquantes.
+- « Mot de passe oublié ? » : un lien par email (valable 1 h, une fois), à ouvrir dans le navigateur où on veut utiliser l'app → écran « Choisis un nouveau mot de passe ». Le mot de passe peut aussi être changé dans le dashboard (Users → … → Reset password).
+
+Chaque navigateur a sa propre session : se connecter dans Chrome, puis « Ajouter à l'écran d'accueil » depuis Chrome pour que la PWA soit connectée.
+
+Une écriture qui échoue (réseau coupé, session expirée…) affiche un bandeau rouge « Sauvegarde échouée ». « Recharger » remet l'app dans l'état du serveur.
 
 ## Tester la PWA (installation, hors ligne)
 
@@ -63,8 +81,8 @@ Puis ouvrir http://localhost:4173, et sur le téléphone « Ajouter à l'écran 
 
 ## Données locales
 
-- Les données vivent dans `localStorage` sous la clé `habikit:v2` (v1 = avant l'ajout des types / activités ; changer la clé force le rechargement de la fake data).
-- Bouton ↺ dans l'app = remplace tout par la fake data.
+- Sans backend configuré (`npm run dev` sans `.env.development`), les données vivent dans `localStorage` sous la clé `habikit:v2` (v1 = avant l'ajout des types / activités ; changer la clé force le rechargement de la fake data).
+- Bouton ↺ dans l'app = remplace tout par la fake data (mode local uniquement).
 - Dans la console navigateur : `localStorage.removeItem('habikit:v2')` puis recharger = même effet.
 
 ## Git
