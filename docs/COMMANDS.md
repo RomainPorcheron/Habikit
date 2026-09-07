@@ -39,7 +39,7 @@ Le workflow `.github/workflows/deploy.yml` publie **deux versions** de l'app sur
 Pour `Habikit-dev` d'abord, puis `Habikit-prod` plus tard avec les variables `*_PROD`.
 
 1. **Schéma** : Supabase → SQL Editor → New query → coller le contenu de [supabase/schema.sql](../supabase/schema.sql) (sur GitHub, ouvrir le fichier → « Raw » → tout sélectionner / copier) → Run. Résultat attendu : « Success. No rows returned ».
-2. **Auth** : Authentication → Providers → Email : activé (magic link, pas besoin de mot de passe). Authentication → URL Configuration :
+2. **Auth** : Authentication → Providers → Email : activé. Authentication → URL Configuration :
    - Site URL : `https://romainporcheron.github.io/Habikit/dev/`
    - Redirect URLs : ajouter `https://romainporcheron.github.io/Habikit/dev/**` et `http://localhost:5173/**`
 3. **Clés** : Project Settings → API (ou « API Keys ») : copier **Project URL** et la clé **anon / publishable** (`sb_publishable_…` ou `eyJ…` selon l'âge du projet, les deux marchent).
@@ -50,14 +50,21 @@ Pour `Habikit-dev` d'abord, puis `Habikit-prod` plus tard avec les variables `*_
 
 Pour travailler en local, copier `.env.example` en `.env.development` et y mettre les mêmes valeurs.
 
-## Se connecter (magic link)
+## Se connecter (email + mot de passe)
 
-1. Ouvrir `/Habikit/dev/` → écran « Connexion » → saisir l'email → « Recevoir le lien ».
-2. Ouvrir le lien reçu **sur le même téléphone, dans le même navigateur** (flux PKCE : le secret est dans le navigateur qui a demandé le lien). L'app s'ouvre connectée.
-3. Premier login : les cinq habitudes du brief sont créées, vides. Le bouton ↺ ne charge plus de fake data, il recrée seulement les habitudes de départ manquantes.
-4. Déconnexion : bouton ⏻ en haut à droite.
+Un seul compte, créé à la main dans Supabase. Pas d'inscription depuis l'app.
 
-Limites Supabase par défaut (SMTP intégré) : 2 emails de magic link par heure, et le lien expire au bout d'une heure. Suffisant pour un seul utilisateur ; sinon brancher un SMTP perso dans Authentication → SMTP Settings.
+Une fois par projet Supabase (dev, puis prod) :
+1. Authentication → **Users** → Add user → Create new user : email + mot de passe, cocher **Auto Confirm User**.
+2. Authentication → **Sign In / Providers** → Email : laisser activé. Désactiver **Allow new users to sign up** (personne d'autre ne peut créer de compte).
+3. Authentication → URL Configuration : `https://romainporcheron.github.io/Habikit/dev/**` dans Redirect URLs (déjà fait ; sert au lien « mot de passe oublié »).
+
+Dans l'app :
+- Écran « Connexion » : email + mot de passe → « Se connecter ». La session reste ouverte dans ce navigateur (jeton renouvelé automatiquement) jusqu'au bouton ⏻.
+- Premier login : les cinq habitudes du brief sont créées, vides. Le bouton ↺ recrée seulement les habitudes de départ manquantes.
+- « Mot de passe oublié ? » : un lien par email (valable 1 h, une fois), à ouvrir dans le navigateur où on veut utiliser l'app → écran « Choisis un nouveau mot de passe ». Le mot de passe peut aussi être changé dans le dashboard (Users → … → Reset password).
+
+Chaque navigateur a sa propre session : se connecter dans Chrome, puis « Ajouter à l'écran d'accueil » depuis Chrome pour que la PWA soit connectée.
 
 Une écriture qui échoue (réseau coupé, session expirée…) affiche un bandeau rouge « Sauvegarde échouée ». « Recharger » remet l'app dans l'état du serveur.
 

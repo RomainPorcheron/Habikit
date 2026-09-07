@@ -37,7 +37,7 @@ Une habitude peut déclarer `options` (liste de choix), `defaultOption` et `allo
 
 ## Flux de données
 
-1. `AuthProvider` lit la session Supabase (localStorage, ou retour du magic link dans l'URL). Sans backend configuré, on est « local » et connecté d'office.
+1. `AuthProvider` lit la session Supabase (localStorage, ou retour du lien « mot de passe oublié » dans l'URL). Sans backend configuré, on est « local » et connecté d'office.
 2. `StoreProvider` charge un `Snapshot` via `repo.load()` : `supabaseRepo` si le client existe, sinon `localRepo` (localStorage, seed si vide).
 3. Les composants lisent `state` et appellent `actions.*`. Chaque action **dispatche d'abord** dans le reducer (mise à jour optimiste, l'UI ne bloque jamais) **puis** appelle l'écriture unitaire correspondante (`upsertHabit`, `upsertEntry`, `deleteEntry`…).
 4. Une écriture qui échoue remonte dans `syncError` : bandeau rouge « Sauvegarde échouée » avec un bouton Recharger (`actions.reload()` rejoue `repo.load()`).
@@ -76,7 +76,7 @@ Deux projets (`Habikit-dev`, `Habikit-prod` à créer), deux tables (`habits`, `
 - `reset()` : recrée seulement les habitudes de départ manquantes (comparaison par nom), jamais de fake data en base.
 - Mapping camelCase ↔ snake_case dans le même fichier (`toHabit` / `fromHabit`, `toEntry` / `fromEntry`). `order` ↔ `position`, `createdAt` ↔ `created_at`.
 
-Auth : magic link (`signInWithOtp`, flux PKCE). Le lien doit être ouvert sur le même appareil et le même navigateur que la demande. `emailRedirectTo` = origine + `BASE_URL`, donc `/Habikit/dev/` en dev et `/Habikit/` en prod ; ces URL doivent être dans la liste Redirect URLs du projet Supabase.
+Auth : email + mot de passe (`signInWithPassword`). Le compte est créé dans le dashboard, les inscriptions sont désactivées côté Supabase. Session en localStorage du navigateur (jeton d'accès 1 h + jeton de rafraîchissement, renouvelé par le client). « Mot de passe oublié » : `resetPasswordForEmail` → lien vers `BASE_URL` (à déclarer dans Redirect URLs) → événement `PASSWORD_RECOVERY` → `AuthGate` affiche `SetPassword` (`updateUser({ password })`) avant l'app. Sans session, la RLS ne rend aucune ligne, clé publishable ou pas.
 
 Offline : pas encore. En attendant, une écriture sans réseau affiche le bandeau d'erreur, l'UI reste à jour localement jusqu'au prochain rechargement. Phase 2 : file d'attente en localStorage rejouée à la reconnexion.
 

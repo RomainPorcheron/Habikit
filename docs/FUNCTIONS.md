@@ -34,9 +34,9 @@
 
 | Export | Signature | Rôle |
 |---|---|---|
-| `AuthProvider` | composant | Écoute `onAuthStateChange`, nettoie l'URL après le magic link. |
-| `useAuth` | `() => { loading, session, local, signOut }` | `local` = pas de backend configuré. |
-| `AuthGate` | composant | Rend `Login` tant qu'il n'y a pas de session (avec backend). |
+| `AuthProvider` | composant | Écoute `onAuthStateChange`, détecte `PASSWORD_RECOVERY`, nettoie l'URL. |
+| `useAuth` | `() => { loading, session, recovering, local, signOut, finishRecovery }` | `local` = pas de backend configuré. |
+| `AuthGate` | composant | Sans session → `Login` ; session de récupération → `SetPassword` ; sinon l'app. |
 
 ## src/store.tsx
 
