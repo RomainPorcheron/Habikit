@@ -43,11 +43,12 @@ Garder l'interface et la lisibilité de HabitKit : dashboard = liste de cartes, 
   - [x] Config d'environnement (`src/config.ts`), client Supabase, pastille d'état dans l'en-tête.
   - [x] GitHub Pages en deux versions : `/Habikit/` (main, prod) et `/Habikit/dev/` (branche dev).
   - [x] `schema.sql` joué sur Habikit-dev, Variables GitHub renseignées, branche `dev` créée (2026-09-05, pastille `dev · Supabase OK`).
-  - [x] `supabaseRepo` (lecture 13 mois, écritures unitaires optimistes) + auth magic link + habitudes de départ créées au premier login.
+  - [x] `supabaseRepo` (lecture 13 mois, écritures unitaires optimistes) + auth email / mot de passe + habitudes de départ créées au premier login.
   - [ ] Valider en dev depuis le téléphone : login, saisie, édition, suppression, rechargement.
+  - [ ] Créer l'utilisateur dans Supabase (Users → Add user) et désactiver les inscriptions.
   - [ ] Offline : file d'attente des écritures (phase 2).
   - [ ] Projet `Habikit-prod`, promotion.
-- [x] Authentification : un seul compte (Romain), magic link (`src/auth.tsx`, `components/Login.tsx`).
+- [x] Authentification : un seul compte (Romain), email + mot de passe, inscriptions désactivées, mot de passe oublié (`src/auth.tsx`, `components/Login.tsx`).
 - [ ] Archiver / réordonner les habitudes (drag).
 - [ ] Export / import JSON.
 - [ ] Vue compacte et vue « checklist » comme HabitKit (optionnel).
@@ -103,3 +104,4 @@ supabase/schema.sql   schéma backend proposé
 - **Alcool** : comptage par type à renseigner, Bière par défaut.
 - **Sport** : activité choisie dans une liste (Vélo, Escalade, Badminton, Marche, Rando, Salle de sport) ou « Autre » à écrire.
 - **Un seul utilisateur** : Romain.
+- **Auth** (2026-09-06) : email + mot de passe plutôt que magic link, pour pouvoir se connecter dans n'importe quel navigateur sans dépendre de celui qui ouvre le lien.
