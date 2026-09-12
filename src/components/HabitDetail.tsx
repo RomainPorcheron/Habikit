@@ -94,8 +94,7 @@ export function HabitDetail({ habit, entries, onBack, onEdit, onAddEntry, onQuic
         selected={selected}
         onSelect={(k) => setSelected(k === selected ? null : k)}
         onQuickAdd={(k) => { setSelected(k); quick(k); }}
-        onDetailedAdd={(k) => { setSelected(k); onAddEntry(k); }}
-        hint={needsSheet ? 'Tap sur un jour : ajouter' : 'Tap sur un jour : +1 · appui long : préciser'}
+        hint={needsSheet ? 'Tap : voir le jour · appui long : ajouter' : 'Tap : voir le jour · appui long : +1'}
         onPrev={() => setMonth(addMonths(month, -1))}
         onNext={() => setMonth(addMonths(month, 1))}
         monthTotal={shownMonthTotal}

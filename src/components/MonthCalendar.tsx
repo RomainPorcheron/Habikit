@@ -9,12 +9,10 @@ interface Props {
   month: Date;
   totals: Map<string, number>;
   selected: string | null;
-  /** Tap sur un jour futur : juste le sélectionner. */
+  /** Tap : sélectionner le jour (ses entrées et les boutons d'ajout s'affichent en dessous). */
   onSelect(key: string): void;
-  /** Tap court sur un jour passé : +1 direct. */
+  /** Appui long sur un jour passé : raccourci +1 direct. */
   onQuickAdd(key: string): void;
-  /** Appui long sur un jour passé : formulaire complet. */
-  onDetailedAdd(key: string): void;
   /** Astuce affichée sous la grille. */
   hint: string;
   onPrev(): void;
@@ -22,8 +20,9 @@ interface Props {
   monthTotal: number;
 }
 
-export function MonthCalendar({ habit, month, totals, selected, onSelect, onQuickAdd, onDetailedAdd, hint, onPrev, onNext, monthTotal }: Props) {
-  // Tap court = +1 direct, appui long = formulaire (même geste que sur la carte). Jour futur : juste sélectionner.
+export function MonthCalendar({ habit, month, totals, selected, onSelect, onQuickAdd, hint, onPrev, onNext, monthTotal }: Props) {
+  // Tap = sélectionner le jour (jamais d'ajout : on doit pouvoir consulter une journée sans rien modifier).
+  // Appui long sur un jour passé = raccourci +1 direct.
   const timer = useRef<number | null>(null);
   const longFired = useRef(false);
   const down = (key: string, past: boolean) => {
@@ -32,14 +31,12 @@ export function MonthCalendar({ habit, month, totals, selected, onSelect, onQuic
     timer.current = window.setTimeout(() => {
       longFired.current = true;
       if (navigator.vibrate) navigator.vibrate(30);
-      onDetailedAdd(key);
+      onQuickAdd(key);
     }, 420);
   };
-  const up = (key: string, past: boolean) => {
+  const up = (key: string) => {
     if (timer.current) window.clearTimeout(timer.current);
-    if (longFired.current) return;
-    if (past) onQuickAdd(key);
-    else onSelect(key);
+    if (!longFired.current) onSelect(key);
   };
   const cancel = () => {
     if (timer.current) window.clearTimeout(timer.current);
@@ -80,7 +77,7 @@ export function MonthCalendar({ habit, month, totals, selected, onSelect, onQuic
               className={cls}
               style={{ backgroundColor: levelColor(habit.color, level) }}
               onPointerDown={() => down(key, key <= todayKey)}
-              onPointerUp={() => up(key, key <= todayKey)}
+              onPointerUp={() => up(key)}
               onPointerLeave={cancel}
               onPointerCancel={cancel}
               onContextMenu={(e) => e.preventDefault()}
