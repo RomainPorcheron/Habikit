@@ -23,9 +23,9 @@ const nowTime = () => {
 export function LogSheet({ habit, date, entry, onSave, onDelete, onClose }: Props) {
   const [day, setDay] = useState(entry?.date ?? date ?? toKey(today()));
   const [time, setTime] = useState(entry ? `${pad(new Date(entry.at).getHours())}:${pad(new Date(entry.at).getMinutes())}` : nowTime());
-  const [count, setCount] = useState(entry?.count ?? 1);
-  const [duration, setDuration] = useState<string>(entry?.duration != null ? String(entry.duration) : '');
-  const [amount, setAmount] = useState<string>(entry?.amount != null ? String(entry.amount) : '');
+  const [count, setCount] = useState(entry?.count ?? habit.defaultCount ?? 1);
+  const [duration, setDuration] = useState<string>(entry?.duration != null ? String(entry.duration) : habit.defaultDuration != null ? String(habit.defaultDuration) : '');
+  const [amount, setAmount] = useState<string>(entry?.amount != null ? String(entry.amount) : habit.defaultAmount != null ? String(habit.defaultAmount) : '');
   const [note, setNote] = useState(entry?.note ?? '');
   const options = habit.options ?? [];
   const initialCategory = entry?.category ?? habit.defaultOption ?? '';
@@ -38,7 +38,16 @@ export function LogSheet({ habit, date, entry, onSave, onDelete, onClose }: Prop
   const hasAmount = habit.fields.includes('amount');
   const hasNote = habit.fields.includes('note');
 
+  // La mesure de l'habitude (durée pour Sport, montant pour Commandes) est obligatoire :
+  // sans elle l'entrée vaut 0 et n'apparaît ni dans la heatmap, ni dans le calendrier, ni dans les stats.
+  const parse = (v: string) => Number(v.replace(',', '.'));
+  const metricMissing =
+    (habit.metric === 'duration' && !(parse(duration) > 0)) ||
+    (habit.metric === 'amount' && !(parse(amount) > 0));
+  const metricLabel = habit.metric === 'duration' ? 'la durée' : 'le montant';
+
   const submit = () => {
+    if (metricMissing) return;
     const d = fromKey(day);
     const [hh, mm] = time.split(':').map(Number);
     const at = new Date(d.getFullYear(), d.getMonth(), d.getDate(), hh || 0, mm || 0).toISOString();
@@ -134,11 +143,12 @@ export function LogSheet({ habit, date, entry, onSave, onDelete, onClose }: Prop
           </label>
         )}
 
+        {metricMissing && <div className="muted small">Renseigne {metricLabel} pour enregistrer.</div>}
         <div className="sheet-actions">
           {entry && onDelete && <button className="btn danger-btn" onClick={onDelete}>Supprimer</button>}
           <span style={{ flex: 1 }} />
           <button className="btn secondary" onClick={onClose}>Annuler</button>
-          <button className="btn primary" onClick={submit}>Enregistrer</button>
+          <button className="btn primary" disabled={metricMissing} onClick={submit}>Enregistrer</button>
         </div>
       </div>
     </div>

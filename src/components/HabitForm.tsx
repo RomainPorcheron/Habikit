@@ -27,6 +27,12 @@ export function HabitForm({ habit, onSave, onDelete, onClose }: Props) {
   const [optionsText, setOptionsText] = useState((habit?.options ?? []).join(', '));
   const [defaultOption, setDefaultOption] = useState(habit?.defaultOption ?? '');
   const [allowCustomOption, setAllowCustomOption] = useState(habit?.allowCustomOption ?? false);
+  const [defaultCount, setDefaultCount] = useState(habit?.defaultCount != null ? String(habit.defaultCount) : '1');
+  const [defaultDuration, setDefaultDuration] = useState(habit?.defaultDuration != null ? String(habit.defaultDuration) : '');
+  const [defaultAmount, setDefaultAmount] = useState(habit?.defaultAmount != null ? String(habit.defaultAmount) : '');
+  // '' ou non numérique → pas de valeur par défaut.
+  const num = (v: string) => { const n = Number(v.replace(',', '.')); return v.trim() !== '' && Number.isFinite(n) && n > 0 ? n : undefined; };
+  const quickDirect = (!fields.includes('duration') || num(defaultDuration) != null) && (!fields.includes('amount') || num(defaultAmount) != null);
   const parsedOptions = optionsText.split(',').map((o) => o.trim()).filter(Boolean);
 
   const toggleField = (f: FieldKey) => {
@@ -56,6 +62,9 @@ export function HabitForm({ habit, onSave, onDelete, onClose }: Props) {
       options: parsedOptions.length ? parsedOptions : undefined,
       defaultOption: parsedOptions.includes(defaultOption) ? defaultOption : undefined,
       allowCustomOption: allowCustomOption || undefined,
+      defaultCount: num(defaultCount) != null && num(defaultCount) !== 1 ? num(defaultCount) : undefined,
+      defaultDuration: fields.includes('duration') ? num(defaultDuration) : undefined,
+      defaultAmount: fields.includes('amount') ? num(defaultAmount) : undefined,
     });
   };
 
@@ -122,7 +131,34 @@ export function HabitForm({ habit, onSave, onDelete, onClose }: Props) {
             <button className={`chip ${fields.includes('amount') ? 'active' : ''}`} onClick={() => toggleField('amount')}>Montant €</button>
             <button className={`chip ${fields.includes('note') ? 'active' : ''}`} onClick={() => toggleField('note')}>Détail texte</button>
           </div>
-          <span className="muted small">Sans durée ni montant, le bouton de la carte ajoute +1 directement. Appui long = fiche complète.</span>
+          <span className="muted small">
+            {quickDirect
+              ? 'Le bouton de la carte ajoute directement avec les valeurs par défaut. Appui long = fiche complète.'
+              : 'Sans valeur par défaut pour la durée / le montant, le bouton de la carte ouvre la fiche.'}
+          </span>
+        </div>
+
+        <div className="field">
+          <span>Valeurs par défaut</span>
+          <div className="row3">
+            <label className="field">
+              <span>{unit.trim() || 'Quantité'}</span>
+              <input type="number" min={0} step="any" value={defaultCount} onChange={(e) => setDefaultCount(e.target.value)} />
+            </label>
+            {fields.includes('duration') && (
+              <label className="field">
+                <span>Durée (h)</span>
+                <input type="text" inputMode="decimal" value={defaultDuration} onChange={(e) => setDefaultDuration(e.target.value)} placeholder="1" />
+              </label>
+            )}
+            {fields.includes('amount') && (
+              <label className="field">
+                <span>Montant (€)</span>
+                <input type="text" inputMode="decimal" value={defaultAmount} onChange={(e) => setDefaultAmount(e.target.value)} placeholder="20" />
+              </label>
+            )}
+          </div>
+          <span className="muted small">Pré-remplies dans la fiche et utilisées par le +1 rapide.</span>
         </div>
 
         <div className="field">

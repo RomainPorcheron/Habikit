@@ -32,6 +32,8 @@ Une habitude déclare une `metric` (`count` | `duration` | `amount`) : c'est ce 
 ### Choix : options par habitude
 Une habitude peut déclarer `options` (liste de choix), `defaultOption` et `allowCustomOption`. L'entrée stocke le choix retenu dans `category`. C'est un seul mécanisme pour deux besoins : le type de boisson (Bière par défaut, donc le +1 rapide log une bière) et l'activité sportive (liste + « Autre » en texte libre). Le détail agrège par `category` sur le mois affiché.
 
+Une habitude peut aussi porter des valeurs par défaut (`defaultCount`, `defaultDuration`, `defaultAmount`). Elles pré-remplissent la fiche et alimentent le +1 rapide : tant qu'une durée ou un montant à saisir n'a pas de valeur par défaut, le tap ouvre la fiche (`needsSheet` dans `src/lib/quick.ts`) ; sinon il ajoute directement (Sport · Vélo · 1h).
+
 ### Choix : build vs quit
 `kind` change uniquement la sémantique de la série (jours faits vs jours sans) et le style du bouton. La grille colore toujours les jours où il y a eu quelque chose : pour l'alcool, une case pleine = un jour où on a bu, ce que Romain veut voir d'un regard.
 

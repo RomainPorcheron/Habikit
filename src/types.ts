@@ -39,6 +39,12 @@ export interface Habit {
   defaultOption?: string;
   /** Autoriser « Autre » avec texte libre. */
   allowCustomOption?: boolean;
+  /** Valeurs par défaut : pré-remplies dans la fiche et utilisées par le +1 rapide. */
+  defaultCount?: number;
+  /** Heures décimales. Si renseignée, le +1 rapide n'ouvre plus la fiche pour Sport & co. */
+  defaultDuration?: number;
+  /** Euros. Même logique que defaultDuration. */
+  defaultAmount?: number;
   archived: boolean;
   order: number;
   createdAt: string;

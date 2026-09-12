@@ -38,7 +38,7 @@ Le workflow `.github/workflows/deploy.yml` publie **deux versions** de l'app sur
 
 Pour `Habikit-dev` d'abord, puis `Habikit-prod` plus tard avec les variables `*_PROD`.
 
-1. **Schéma** : Supabase → SQL Editor → New query → coller le contenu de [supabase/schema.sql](../supabase/schema.sql) (sur GitHub, ouvrir le fichier → « Raw » → tout sélectionner / copier) → Run. Résultat attendu : « Success. No rows returned ».
+1. **Schéma** : Supabase → SQL Editor → New query → coller le contenu de [supabase/schema.sql](../supabase/schema.sql). Sur un projet créé avant, rejouer aussi les fichiers de [supabase/migrations](../supabase/migrations) dans l'ordre (idempotents) (sur GitHub, ouvrir le fichier → « Raw » → tout sélectionner / copier) → Run. Résultat attendu : « Success. No rows returned ».
 2. **Auth** : Authentication → Providers → Email : activé. Authentication → URL Configuration :
    - Site URL : `https://romainporcheron.github.io/Habikit/dev/`
    - Redirect URLs : ajouter `https://romainporcheron.github.io/Habikit/dev/**` et `http://localhost:5173/**`

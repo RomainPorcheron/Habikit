@@ -21,6 +21,9 @@ interface HabitRow {
   options: string[] | null;
   default_option: string | null;
   allow_custom_option: boolean;
+  default_count: number | null;
+  default_duration: number | null;
+  default_amount: number | null;
   archived: boolean;
   position: number;
   created_at: string;
@@ -69,6 +72,9 @@ function toHabit(r: HabitRow): Habit {
     options: r.options ?? undefined,
     defaultOption: r.default_option ?? undefined,
     allowCustomOption: r.allow_custom_option || undefined,
+    defaultCount: r.default_count == null ? undefined : Number(r.default_count),
+    defaultDuration: r.default_duration == null ? undefined : Number(r.default_duration),
+    defaultAmount: r.default_amount == null ? undefined : Number(r.default_amount),
     archived: r.archived,
     order: r.position,
     createdAt: r.created_at,
@@ -92,6 +98,9 @@ function fromHabit(h: Habit, uid: string): HabitRow {
     options: h.options ?? null,
     default_option: h.defaultOption ?? null,
     allow_custom_option: h.allowCustomOption ?? false,
+    default_count: h.defaultCount ?? null,
+    default_duration: h.defaultDuration ?? null,
+    default_amount: h.defaultAmount ?? null,
     archived: h.archived,
     position: h.order,
     created_at: h.createdAt,

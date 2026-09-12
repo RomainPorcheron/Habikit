@@ -4,6 +4,7 @@ import { useStore } from './store';
 import { useAuth } from './auth';
 import { formatLong, fromKey, toKey, today } from './lib/dates';
 import { alertsFor, entriesOf, formatValue } from './lib/stats';
+import { quickEntry } from './lib/quick';
 import { PALETTE } from './lib/colors';
 import { HabitCard } from './components/HabitCard';
 import { HabitDetail } from './components/HabitDetail';
@@ -69,13 +70,13 @@ export default function App() {
 
   const confirmAdded = (habit: Habit, entry: Entry) => setToast({ id: Date.now(), habit, entry });
 
-  // +1 direct. Sur un jour passé, l'heure est fixée à midi (on ne la connaît pas).
+  // +1 direct avec les valeurs par défaut de l'habitude. Sur un jour passé, l'heure est fixée à midi.
   const quickLog = (habitId: string, date = toKey(today())) => {
     const habit = state.habits.find((h) => h.id === habitId);
     if (!habit) return;
     const d = fromKey(date);
     const at = date === toKey(today()) ? new Date() : new Date(d.getFullYear(), d.getMonth(), d.getDate(), 12, 0);
-    const entry = actions.addEntry({ habitId, date, at: at.toISOString(), count: 1, category: habit.defaultOption });
+    const entry = actions.addEntry(quickEntry(habit, date, at));
     confirmAdded(habit, entry);
   };
 
@@ -163,6 +164,7 @@ export default function App() {
 
       {sheet && sheetHabit && (
         <LogSheet
+          key={sheet.entry?.id ?? `${sheet.habitId}:${sheet.date ?? 'today'}`}
           habit={sheetHabit}
           date={sheet.date}
           entry={sheet.entry}

@@ -3,6 +3,7 @@ import type { Entry, Habit } from '../types';
 import { periodNoun, toKey, today } from '../lib/dates';
 import { currentStreak, dailyTotals, formatValue, goalProgress } from '../lib/stats';
 import { PALETTE } from '../lib/colors';
+import { needsSheet as sheetNeeded, quickLabel } from '../lib/quick';
 import { Heatmap } from './Heatmap';
 
 interface Props {
@@ -66,11 +67,11 @@ export function HabitCard({ habit, entries, onOpen, onQuickLog, onDetailedLog }:
   const justLogged = pulse > 0;
 
   // Bouton principal.
-  // - Habitude avec durée / montant à saisir (Sport, Commandes) : un tap ouvre la fiche, point. Pas d'appui long.
-  // - Sinon : tap = +1 direct, appui long = fiche détaillée.
+  // - Durée / montant à saisir sans valeur par défaut (Commandes) : un tap ouvre la fiche, point. Pas d'appui long.
+  // - Sinon : tap = +1 direct avec les valeurs par défaut (ex. Sport · Vélo · 1h), appui long = fiche détaillée.
   // L'action est déclenchée sur `click`, jamais sur `pointerup` : sur mobile, ouvrir la fiche au pointerup faisait
   // atterrir le click synthétique de la même tape sur l'overlay, qui refermait aussitôt la fiche.
-  const needsSheet = habit.fields.includes('duration') || habit.fields.includes('amount');
+  const needsSheet = sheetNeeded(habit);
   const timer = useRef<number | null>(null);
   const longFired = useRef(false);
   const clearTimer = () => {
@@ -106,7 +107,7 @@ export function HabitCard({ habit, entries, onOpen, onQuickLog, onDetailedLog }:
   const doneToday = habit.kind === 'build' && todayValue > 0;
   const hint = needsSheet
     ? 'Ouvrir la fiche'
-    : `+1${habit.defaultOption ? ` ${habit.defaultOption}` : ''} · appui long pour préciser`;
+    : `${quickLabel(habit)} · appui long pour préciser`;
 
   return (
     <article ref={cardRef} className={`card ${ring}`} style={{ ['--c' as string]: color }}>

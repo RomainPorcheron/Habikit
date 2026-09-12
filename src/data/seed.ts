@@ -53,6 +53,7 @@ export const SEED_HABITS: Habit[] = [
     fields: ['duration'],
     options: ['Vélo', 'Escalade', 'Badminton', 'Marche', 'Rando', 'Salle de sport'],
     allowCustomOption: true,
+    defaultDuration: 1,
     goal: { type: 'min', value: 1, metric: 'count', period: 'day' },
     consequence: '30 min de marche le lendemain',
     archived: false,

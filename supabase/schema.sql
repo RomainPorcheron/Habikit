@@ -22,6 +22,9 @@ create table if not exists public.habits (
   options     text[],                                 -- choix proposés (Bière, Vin… / Vélo, Escalade…)
   default_option text,                                -- choix du +1 rapide
   allow_custom_option boolean not null default false,
+  default_count    numeric,                           -- valeurs par défaut (fiche + +1 rapide)
+  default_duration numeric,                           -- heures décimales
+  default_amount   numeric,                           -- euros
   archived    boolean not null default false,
   position    integer not null default 0,
   created_at  timestamptz not null default now(),

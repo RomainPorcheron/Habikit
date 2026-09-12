@@ -5,6 +5,7 @@ import {
 } from '../lib/dates';
 import { bestStreak, currentStreak, dailyTotals, entriesByDay, entryValue, formatValue, goalProgress, sumEntries, totalInRange } from '../lib/stats';
 import { PALETTE } from '../lib/colors';
+import { needsSheet as sheetNeeded, quickLabel as quickLabelFor } from '../lib/quick';
 import { Heatmap } from './Heatmap';
 import { MonthCalendar } from './MonthCalendar';
 
@@ -55,9 +56,9 @@ export function HabitDetail({ habit, entries, onBack, onEdit, onAddEntry, onQuic
   const selectedEntries = selected ? byDay.get(selected) ?? [] : [];
   const todayKey = toKey(t);
   const selectedIsPast = !!selected && selected <= todayKey;
-  // Même règle que la carte : +1 direct sauf si une durée / un montant est à saisir.
-  const needsSheet = habit.fields.includes('duration') || habit.fields.includes('amount');
-  const quickLabel = needsSheet ? 'Ajouter…' : `+1 ${habit.defaultOption ?? habit.unit}`.trim();
+  // Même règle que la carte : +1 direct sauf si une durée / un montant est à saisir sans valeur par défaut.
+  const needsSheet = sheetNeeded(habit);
+  const quickLabel = needsSheet ? 'Ajouter…' : quickLabelFor(habit);
   const quick = (date: string) => (needsSheet ? onAddEntry(date) : onQuickAdd(date));
 
   // Répartition par type sur le mois affiché (Bière / Vin…, Vélo / Escalade…).
