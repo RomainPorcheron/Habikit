@@ -4,18 +4,32 @@
 
 **Fonction** : Les composants ne savent pas d'où viennent les données. `Repo` expose `load / save / reset` ; `localRepo` est l'implémentation actuelle.
 
-**Intérêt** : Brancher Supabase (ou autre) sans toucher à l'UI. Permet aussi de garder un mode « démo / offline ». Trade-off : `save(snapshot)` complet est simple mais ne convient pas à un backend ; on passera à des écritures unitaires.
+**Intérêt** : Brancher Supabase sans toucher à l'UI, et garder un mode « démo » (localStorage) quand aucun backend n'est configuré. Les écritures sont unitaires (une ligne à la fois), ce qui colle aux tables SQL et prépare la file d'attente hors ligne.
 
 **Exemple** :
 ```ts
 export interface Repo {
+  readonly demo: boolean;
   load(): Promise<Snapshot>;
-  save(snapshot: Snapshot): Promise<void>;
+  upsertHabit(h: Habit): Promise<void>;
+  deleteHabit(id: string): Promise<void>;
+  upsertEntry(e: Entry): Promise<void>;
+  deleteEntry(id: string): Promise<void>;
   reset(): Promise<Snapshot>;
 }
 ```
 
-**Utilisé dans ce projet** : `src/data/repo.ts`, consommé par `src/store.tsx`.
+**Utilisé dans ce projet** : `src/data/repo.ts` (`localRepo`), `src/data/supabaseRepo.ts`, consommés par `src/store.tsx`.
+
+---
+
+### Mise à jour optimiste
+
+**Fonction** : Chaque action du store modifie l'état en mémoire immédiatement, puis lance l'écriture backend sans l'attendre. Si elle échoue, l'erreur est stockée dans `syncError` et affichée dans un bandeau avec un bouton Recharger.
+
+**Intérêt** : Le +1 reste instantané sur mobile, même en 3G. L'UI ne dépend jamais de la latence réseau. Trade-off : entre l'échec et le rechargement, l'écran montre un état que le serveur n'a pas ; acceptable pour un seul utilisateur, et la phase 2 (file d'attente) le résoudra.
+
+**Utilisé dans ce projet** : `src/store.tsx` (`persist()`), bandeau `.sync-error` dans `App.tsx`.
 
 ---
 
@@ -58,11 +72,23 @@ function mulberry32(seed: number) {
 
 ### Tap court / appui long sur un même bouton
 
-**Fonction** : `pointerdown` arme un timer (420 ms). S'il expire → action longue (fiche détaillée). `pointerup` avant → action courte (+1).
+**Fonction** : `pointerdown` arme un timer (450 ms). S'il expire → action longue (fiche détaillée). Sinon l'action courte (+1) part sur `click`, jamais sur `pointerup`. Les habitudes qui exigent une durée ou un montant (Sport, Commandes) n'ont pas d'appui long : un tap ouvre la fiche.
 
 **Intérêt** : Un seul bouton par carte, comme HabitKit, mais deux gestes. `onContextMenu` est neutralisé pour éviter le menu Android sur appui long.
 
-**Utilisé dans ce projet** : `src/components/HabitCard.tsx`.
+**Piège évité (clic fantôme)** : sur mobile, le `click` synthétique d'une tape est ciblé sur ce qui se trouve sous le doigt *au relâchement*. Si on ouvre la fiche au `pointerup`, ce clic atterrit sur l'overlay qui vient d'apparaître et la referme aussitôt (« je clique et rien ne se passe »). Trois garde-fous : l'action sur `click` ; après un appui long, `swallowNextClick()` avale le clic suivant en phase de capture sur `document` ; l'overlay ne ferme que si le `pointerdown` a commencé sur lui (`downOnOverlay`).
+
+**Utilisé dans ce projet** : `src/components/HabitCard.tsx`, `LogSheet.tsx`, `HabitForm.tsx`.
+
+---
+
+### Retour visuel après un ajout, dérivé des données
+
+**Fonction** : `HabitCard` compare le total du jour au rendu précédent (`useRef`). S'il augmente : le bouton « pop » (Web Animations API), la carte flashe dans sa couleur, la pastille compteur sur le bouton et la puce « auj. » se remontent. `App` affiche un toast « ✓ Alcool · ajouté · +1 Bière » avec **Annuler** (supprime l'entrée) pendant 4 s.
+
+**Intérêt** : Le feedback ne dépend pas du geste (tap +1, fiche enregistrée, ajout depuis le détail) : il se déclenche dès que les entrées changent. L'annulation évite un aller-retour dans le détail en cas de double tap.
+
+**Utilisé dans ce projet** : `src/components/HabitCard.tsx`, `src/App.tsx`.
 
 ---
 

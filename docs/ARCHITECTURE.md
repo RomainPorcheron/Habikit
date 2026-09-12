@@ -6,8 +6,10 @@ Application React monopage, sans routeur : l'écran courant est un état local d
 
 ```
 main.tsx
- └─ StoreProvider (store.tsx)          état global + persistance
-     └─ App.tsx                        navigation, overlays
+ └─ AuthProvider (auth.tsx)            session Supabase (ou « local » sans backend)
+     └─ AuthGate                       écran Login tant qu'il n'y a pas de session
+         └─ StoreProvider (store.tsx)  état global + écritures via Repo
+             └─ App.tsx                navigation, overlays
          ├─ AlertsBanner               alertes calculées (lib/stats.alertsFor)
          ├─ HabitCard × N              carte = Heatmap + bouton + chip
          ├─ HabitDetail                stats, histogramme, MonthCalendar, entrées
@@ -35,11 +37,16 @@ Une habitude peut déclarer `options` (liste de choix), `defaultOption` et `allo
 
 ## Flux de données
 
-1. `StoreProvider` charge un `Snapshot` via `Repo.load()` (localStorage, seed si vide).
-2. Les composants lisent `state` et appellent `actions.*` (reducer synchrone).
-3. Chaque changement d'état est sauvé via `Repo.save()` (effet).
+1. `AuthProvider` lit la session Supabase (localStorage, ou retour du lien « mot de passe oublié » dans l'URL). Sans backend configuré, on est « local » et connecté d'office.
+2. `StoreProvider` charge un `Snapshot` via `repo.load()` : `supabaseRepo` si le client existe, sinon `localRepo` (localStorage, seed si vide).
+3. Les composants lisent `state` et appellent `actions.*`. Chaque action **dispatche d'abord** dans le reducer (mise à jour optimiste, l'UI ne bloque jamais) **puis** appelle l'écriture unitaire correspondante (`upsertHabit`, `upsertEntry`, `deleteEntry`…).
+4. Une écriture qui échoue remonte dans `syncError` : bandeau rouge « Sauvegarde échouée » avec un bouton Recharger (`actions.reload()` rejoue `repo.load()`).
 
-Brancher un backend = fournir une autre implémentation de `Repo` (voir ci-dessous). Les composants ne changent pas.
+Les composants ne savent pas quel backend tourne. `useStore().demo` sert juste à adapter le libellé du bouton ↺.
+
+## Identifiants
+
+`newId()` génère des uuid v4 côté client (`crypto.randomUUID`). Le même id sert de clé en localStorage et de clé primaire dans Postgres : pas de remapping, une entrée créée hors ligne pourra être rejouée telle quelle (phase 2).
 
 ## Calculs (lib/stats.ts)
 
@@ -53,14 +60,25 @@ Brancher un backend = fournir une autre implémentation de `Repo` (voir ci-desso
 
 Toutes les périodes hebdomadaires commencent le lundi (`lib/dates.startOfWeek`). Les clés de jour sont en heure locale (`YYYY-MM-DD`) pour éviter les décalages UTC à minuit.
 
-## Backend (proposé)
+## Environnements et configuration
 
-Supabase, deux projets (dev et prod, voir PLAN.md), deux tables (`habits`, `entries`) + RLS `user_id = auth.uid()`. Schéma dans `supabase/schema.sql`.
+`src/config.ts` lit les variables `VITE_*` au build et expose `APP_ENV` (`local` | `dev` | `prod`), `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `HAS_SUPABASE`. `src/data/supabase.ts` crée le client partagé (`null` sans config) et `pingSupabase()` vérifie URL + clé + schéma. `EnvBadge` affiche le résultat dans l'en-tête.
 
-Implémentation prévue : `src/data/supabaseRepo.ts`
-- `load()` : select habits + entries des 13 derniers mois (la grille n'affiche pas plus), reste à la demande.
-- Écritures unitaires (`upsert` par entrée) plutôt que `save(snapshot)` complet : le store passera à des actions asynchrones avec mise à jour optimiste.
-- Offline : file d'attente des écritures en localStorage, rejouée à la reconnexion (phase 2).
+Un seul site GitHub Pages héberge les deux environnements : prod à `/Habikit/` (branche `main`), dev à `/Habikit/dev/` (branche `dev`). Chacun a sa base, son manifeste (« Habikit DEV ») et son service worker ; celui de prod exclut `/Habikit/dev/` de son fallback de navigation pour ne pas capter l'autre app. Détail dans COMMANDS.md.
+
+## Backend (Supabase)
+
+Deux projets (`Habikit-dev`, `Habikit-prod` à créer), deux tables (`habits`, `entries`) + RLS `user_id = auth.uid()`. Schéma dans `supabase/schema.sql`. Client : `src/data/supabase.ts`.
+
+`src/data/supabaseRepo.ts` :
+- `load()` : toutes les habitudes (triées par `position`) + entrées des 13 derniers mois (la grille n'affiche pas plus). Compte vide → insère les cinq habitudes du brief (Alcool, Sport, Commandes, Doliprane, Tâches) avec des ids neufs, **sans** entrées.
+- Écritures unitaires : `upsert` par ligne (habitude ou entrée), `delete` par id. Supprimer une habitude supprime ses entrées par cascade SQL.
+- `reset()` : recrée seulement les habitudes de départ manquantes (comparaison par nom), jamais de fake data en base.
+- Mapping camelCase ↔ snake_case dans le même fichier (`toHabit` / `fromHabit`, `toEntry` / `fromEntry`). `order` ↔ `position`, `createdAt` ↔ `created_at`.
+
+Auth : email + mot de passe (`signInWithPassword`). Le compte est créé dans le dashboard, les inscriptions sont désactivées côté Supabase. Session en localStorage du navigateur (jeton d'accès 1 h + jeton de rafraîchissement, renouvelé par le client). « Mot de passe oublié » : `resetPasswordForEmail` → lien vers `BASE_URL` (à déclarer dans Redirect URLs) → événement `PASSWORD_RECOVERY` → `AuthGate` affiche `SetPassword` (`updateUser({ password })`) avant l'app. Sans session, la RLS ne rend aucune ligne, clé publishable ou pas.
+
+Offline : pas encore. En attendant, une écriture sans réseau affiche le bandeau d'erreur, l'UI reste à jour localement jusqu'au prochain rechargement. Phase 2 : file d'attente en localStorage rejouée à la reconnexion.
 
 Notifications : **abandonnées** (décision du 2026-09-04). Les alertes restent calculées côté client à l'affichage. La table `push_subscriptions` du schéma est facultative et peut être ignorée.
 

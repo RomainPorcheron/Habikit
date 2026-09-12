@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { Entry, Habit } from '../types';
 import { fromKey, pad, toKey, today } from '../lib/dates';
 
@@ -54,8 +54,15 @@ export function LogSheet({ habit, date, entry, onSave, onDelete, onClose }: Prop
     });
   };
 
+  // Fermeture au tap sur le fond uniquement si l'appui a commencé sur le fond (ignore un clic fantôme après appui long).
+  const downOnOverlay = useRef(false);
+
   return (
-    <div className="overlay" onClick={onClose}>
+    <div
+      className="overlay"
+      onPointerDown={(e) => { downOnOverlay.current = e.target === e.currentTarget; }}
+      onClick={(e) => { if (e.target === e.currentTarget && downOnOverlay.current) onClose(); }}
+    >
       <div className="sheet" onClick={(e) => e.stopPropagation()}>
         <div className="sheet-head">
           <span className="icon small-icon">{habit.icon}</span>

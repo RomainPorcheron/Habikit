@@ -27,7 +27,8 @@ Garder l'interface et la lisibilité de HabitKit : dashboard = liste de cartes, 
 
 ### Faites (prototype, fake data en localStorage)
 - Dashboard : cartes avec icône, nom, description, grille ~30 semaines, bouton ✓ / +, chip objectif, série.
-- Bouton carte : tap = +1 direct (ou fiche si durée/montant à saisir), appui long = fiche complète.
+- Bouton carte : tap = +1 direct (ou fiche si durée/montant à saisir, sans appui long dans ce cas), appui long = fiche complète.
+- Retour visuel à chaque ajout : bouton qui « pop », pastille compteur du jour sur le bouton, puce « auj. » colorée, toast en bas avec Annuler.
 - Fiche de saisie : jour, heure, quantité, durée, montant, détail. Modification et suppression.
 - Détail habitude : grille, stats (semaine, mois, série, record), barre d'objectif, histogramme 12 semaines, calendrier mensuel avec valeur par jour, liste des entrées du jour sélectionné.
 - Formulaire habitude : nom, description, emoji, couleur, type, unité, champs à saisir, métrique affichée, objectif min/max avec période, conséquence.
@@ -37,8 +38,17 @@ Garder l'interface et la lisibilité de HabitKit : dashboard = liste de cartes, 
 - Reset de la fake data (bouton ↺).
 
 ### À faire
-- [ ] Backend et synchronisation (voir ARCHITECTURE.md, section Backend). Romain met en place Supabase à son retour de vacances.
-- [ ] Authentification : un seul compte (Romain), magic link.
+- [ ] Backend et synchronisation (voir ARCHITECTURE.md, section Backend).
+  - [x] Projet Supabase `Habikit-dev` créé (2026-09-05).
+  - [x] Config d'environnement (`src/config.ts`), client Supabase, pastille d'état dans l'en-tête.
+  - [x] GitHub Pages en deux versions : `/Habikit/` (main, prod) et `/Habikit/dev/` (branche dev).
+  - [x] `schema.sql` joué sur Habikit-dev, Variables GitHub renseignées, branche `dev` créée (2026-09-05, pastille `dev · Supabase OK`).
+  - [x] `supabaseRepo` (lecture 13 mois, écritures unitaires optimistes) + auth email / mot de passe + habitudes de départ créées au premier login.
+  - [ ] Valider en dev depuis le téléphone : login, saisie, édition, suppression, rechargement.
+  - [ ] Créer l'utilisateur dans Supabase (Users → Add user) et désactiver les inscriptions.
+  - [ ] Offline : file d'attente des écritures (phase 2).
+  - [ ] Projet `Habikit-prod`, promotion.
+- [x] Authentification : un seul compte (Romain), email + mot de passe, inscriptions désactivées, mot de passe oublié (`src/auth.tsx`, `components/Login.tsx`).
 - [ ] Archiver / réordonner les habitudes (drag).
 - [ ] Export / import JSON.
 - [ ] Vue compacte et vue « checklist » comme HabitKit (optionnel).
@@ -54,8 +64,8 @@ Garder l'interface et la lisibilité de HabitKit : dashboard = liste de cartes, 
 
 Deux environnements séparés dès le backend :
 
-- **dev** : projet Supabase « habikit-dev », `.env.development`, c'est là que je travaille et que Romain teste.
-- **prod** : projet Supabase « habikit-prod », `.env.production`, jamais modifié directement.
+- **dev** : projet Supabase « Habikit-dev », branche `dev`, https://romainporcheron.github.io/Habikit/dev/ ; c'est là que je travaille et que Romain teste.
+- **prod** : projet Supabase « Habikit-prod », branche `main`, https://romainporcheron.github.io/Habikit/ ; jamais modifié directement.
 
 La promotion dev → prod (schéma, build, déploiement) est faite par Romain une fois tout validé en dev. La procédure sera dans COMMANDS.md.
 
@@ -64,13 +74,17 @@ La promotion dev → prod (schéma, build, déploiement) est faite par Romain un
 ```
 src/
   types.ts            modèle (Habit, Entry, Goal, Alert)
-  store.tsx           état global (useReducer) + persistance
+  auth.tsx            session Supabase, AuthGate (écran de connexion), signOut
+  store.tsx           état global (useReducer), écritures optimistes via Repo
+  config.ts           environnement (local/dev/prod) + variables Supabase
   data/repo.ts        interface Repo + implémentation localStorage
+  data/supabase.ts    client Supabase partagé + pingSupabase()
+  data/supabaseRepo.ts Repo Supabase : mapping lignes SQL ↔ Habit/Entry, habitudes de départ
   data/seed.ts        fake data déterministe
   lib/dates.ts        helpers de dates (semaine = lundi)
   lib/stats.ts        totaux, objectifs, séries, niveaux de heatmap, alertes
   lib/colors.ts       palette, emojis
-  components/         Heatmap, HabitCard, HabitDetail, MonthCalendar, LogSheet, HabitForm, AlertsBanner
+  components/         Heatmap, HabitCard, HabitDetail, MonthCalendar, LogSheet, HabitForm, AlertsBanner, EnvBadge, Login
 docs/                 PLAN, ARCHITECTURE, FUNCTIONS, COMMANDS, PATTERNS
 supabase/schema.sql   schéma backend proposé
 ```
@@ -79,7 +93,7 @@ supabase/schema.sql   schéma backend proposé
 
 1. ✅ Prototype front avec fake data.
 2. Valider le PLAN et les réponses aux questions ouvertes.
-3. Mise en place backend (Supabase) par Romain, implémentation `supabaseRepo` + auth.
+3. ✅ Mise en place backend (Supabase dev) par Romain, implémentation `supabaseRepo` + auth. Reste : validation en dev, puis prod.
 4. ✅ PWA installable.
 5. Polish : archivage, réordonnancement, export.
 
@@ -90,3 +104,4 @@ supabase/schema.sql   schéma backend proposé
 - **Alcool** : comptage par type à renseigner, Bière par défaut.
 - **Sport** : activité choisie dans une liste (Vélo, Escalade, Badminton, Marche, Rando, Salle de sport) ou « Autre » à écrire.
 - **Un seul utilisateur** : Romain.
+- **Auth** (2026-09-06) : email + mot de passe plutôt que magic link, pour pouvoir se connecter dans n'importe quel navigateur sans dépendre de celui qui ouvre le lien.

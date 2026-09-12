@@ -18,6 +18,56 @@ Le serveur écoute sur toutes les interfaces (`host: true` dans vite.config.ts).
 ipconfig | findstr IPv4
 ```
 
+## Tester depuis le téléphone sans PC (GitHub Pages)
+
+Le workflow `.github/workflows/deploy.yml` publie **deux versions** de l'app sur le même site Pages, à chaque push sur `main` ou `dev` (ou à la main via Actions → « Run workflow ») :
+
+| Env | Branche | URL | Supabase |
+|---|---|---|---|
+| prod | `main` | https://romainporcheron.github.io/Habikit/ | Habikit-prod (variables `*_PROD`) |
+| dev | `dev` | https://romainporcheron.github.io/Habikit/dev/ | Habikit-dev (variables `*_DEV`) |
+
+- Pré-requis, une seule fois : GitHub → Settings → Pages → Source : **GitHub Actions**.
+- La branche `dev` doit exister (GitHub → menu des branches → taper `dev` → « Create branch dev from main »). Tant qu'elle n'existe pas, seule la prod est publiée.
+- Les deux builds sont distincts : `VITE_BASE`, `VITE_APP_ENV` et les variables Supabase changent, le manifeste aussi (« Habikit DEV », couleur de barre différente). On peut installer les deux PWA côte à côte sur l'écran d'accueil.
+- Une pastille sous la date indique l'environnement et l'état du backend (`dev · Supabase OK`). En prod elle n'apparaît qu'en cas de problème. Tap dessus = revérifier + afficher l'erreur.
+- Piège connu : GitHub identifie chaque déploiement Pages par le commit. Si `main` et `dev` sont sur le même commit (ex. juste après la création de `dev`), sans correctif le second déploiement serait ignoré. Le workflow rend donc l'identifiant unique par exécution (`GITHUB_SHA` surchargé dans le job deploy). Le job deploy affiche aussi le code HTTP de `/Habikit/`, `/Habikit/dev/` et du manifeste dev : 200 attendu partout.
+- Workflow de test depuis le téléphone : l'IA pousse sa branche → PR vers `dev` → merger → attendre ~1 min → ouvrir `/Habikit/dev/`. Une fois validé : PR `dev` → `main`.
+
+## Brancher Supabase (à faire depuis le téléphone, une fois par projet)
+
+Pour `Habikit-dev` d'abord, puis `Habikit-prod` plus tard avec les variables `*_PROD`.
+
+1. **Schéma** : Supabase → SQL Editor → New query → coller le contenu de [supabase/schema.sql](../supabase/schema.sql) (sur GitHub, ouvrir le fichier → « Raw » → tout sélectionner / copier) → Run. Résultat attendu : « Success. No rows returned ».
+2. **Auth** : Authentication → Providers → Email : activé. Authentication → URL Configuration :
+   - Site URL : `https://romainporcheron.github.io/Habikit/dev/`
+   - Redirect URLs : ajouter `https://romainporcheron.github.io/Habikit/dev/**` et `http://localhost:5173/**`
+3. **Clés** : Project Settings → API (ou « API Keys ») : copier **Project URL** et la clé **anon / publishable** (`sb_publishable_…` ou `eyJ…` selon l'âge du projet, les deux marchent).
+4. **GitHub** : repo → Settings → Secrets and variables → Actions → onglet **Variables** → New repository variable :
+   - `SUPABASE_URL_DEV` = Project URL
+   - `SUPABASE_ANON_KEY_DEV` = la clé
+5. Relancer le déploiement (Actions → Deploy to GitHub Pages → Run workflow) ou pousser sur `dev`. Sur `/Habikit/dev/`, la pastille doit afficher `dev · Supabase OK`. `Supabase KO` + message = URL / clé fausse ou schéma non joué.
+
+Pour travailler en local, copier `.env.example` en `.env.development` et y mettre les mêmes valeurs.
+
+## Se connecter (email + mot de passe)
+
+Un seul compte, créé à la main dans Supabase. Pas d'inscription depuis l'app.
+
+Une fois par projet Supabase (dev, puis prod) :
+1. Authentication → **Users** → Add user → Create new user : email + mot de passe, cocher **Auto Confirm User**.
+2. Authentication → **Sign In / Providers** → Email : laisser activé. Désactiver **Allow new users to sign up** (personne d'autre ne peut créer de compte).
+3. Authentication → URL Configuration : `https://romainporcheron.github.io/Habikit/dev/**` dans Redirect URLs (déjà fait ; sert au lien « mot de passe oublié »).
+
+Dans l'app :
+- Écran « Connexion » : email + mot de passe → « Se connecter ». La session reste ouverte dans ce navigateur (jeton renouvelé automatiquement) jusqu'au bouton ⏻.
+- Premier login : les cinq habitudes du brief sont créées, vides. Le bouton ↺ recrée seulement les habitudes de départ manquantes.
+- « Mot de passe oublié ? » : un lien par email (valable 1 h, une fois), à ouvrir dans le navigateur où on veut utiliser l'app → écran « Choisis un nouveau mot de passe ». Le mot de passe peut aussi être changé dans le dashboard (Users → … → Reset password).
+
+Chaque navigateur a sa propre session : se connecter dans Chrome, puis « Ajouter à l'écran d'accueil » depuis Chrome pour que la PWA soit connectée.
+
+Une écriture qui échoue (réseau coupé, session expirée…) affiche un bandeau rouge « Sauvegarde échouée ». « Recharger » remet l'app dans l'état du serveur.
+
 ## Tester la PWA (installation, hors ligne)
 
 Le service worker n'est pas actif en dev. Pour le tester :
@@ -31,8 +81,8 @@ Puis ouvrir http://localhost:4173, et sur le téléphone « Ajouter à l'écran 
 
 ## Données locales
 
-- Les données vivent dans `localStorage` sous la clé `habikit:v2` (v1 = avant l'ajout des types / activités ; changer la clé force le rechargement de la fake data).
-- Bouton ↺ dans l'app = remplace tout par la fake data.
+- Sans backend configuré (`npm run dev` sans `.env.development`), les données vivent dans `localStorage` sous la clé `habikit:v2` (v1 = avant l'ajout des types / activités ; changer la clé force le rechargement de la fake data).
+- Bouton ↺ dans l'app = remplace tout par la fake data (mode local uniquement).
 - Dans la console navigateur : `localStorage.removeItem('habikit:v2')` puis recharger = même effet.
 
 ## Git
@@ -46,14 +96,16 @@ git push
 
 ## Environnements
 
-- `npm run dev` charge `.env.development` (backend dev).
-- `npm run build` charge `.env.production` (backend prod).
+- `npm run dev` charge `.env.development` (backend dev). Sans fichier : `VITE_APP_ENV=local`, pas de backend, localStorage.
+- `npm run build` charge `.env.production` (backend prod). Sur GitHub Pages, ce sont les Variables du repo qui alimentent le build (voir deploy.yml).
+- Modèle : `.env.example`. Variables : `VITE_APP_ENV`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_BASE`.
 
 ## Promotion dev → prod (à faire par Romain, après validation en dev)
 
 À compléter quand le backend sera en place. Squelette :
 
-1. Vérifier que tout est validé en dev (checklist du PLAN).
-2. Rejouer les migrations SQL sur le projet prod (SQL editor ou `supabase db push --linked` sur le projet prod).
-3. `npm run build` puis déployer `dist/` sur l'hébergeur prod.
-4. Ouvrir l'URL prod, se connecter, vérifier une saisie et le dashboard.
+1. Vérifier que tout est validé en dev (checklist du PLAN) sur `/Habikit/dev/`.
+2. Rejouer les migrations SQL sur le projet `Habikit-prod` (SQL editor).
+3. Renseigner `SUPABASE_URL_PROD` / `SUPABASE_ANON_KEY_PROD` dans les Variables GitHub (une fois), avec l'URL prod dans la config Auth de Supabase.
+4. PR `dev` → `main`, merger : le workflow republie `/Habikit/`.
+5. Ouvrir l'URL prod, se connecter, vérifier une saisie et le dashboard.

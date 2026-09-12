@@ -52,6 +52,41 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
 }
 .topbar h1 { margin: 0; font-size: 26px; letter-spacing: -0.02em; }
 .topbar-actions { display: flex; gap: 8px; align-items: center; }
+
+/* Pastille d'environnement (dev / local) sous la date. Cachée en prod quand tout va bien. */
+.env-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  margin-top: 4px; padding: 2px 8px; border-radius: 999px;
+  font-size: 11px; line-height: 16px; color: var(--muted);
+  background: var(--card-2); border: 1px solid transparent;
+}
+.env-badge b { text-transform: uppercase; letter-spacing: 0.04em; }
+.env-badge.env-dev { border-color: var(--warning); color: var(--warning); }
+.env-badge.status-ok { color: var(--ok); }
+.env-badge.status-error { color: var(--danger); border-color: var(--danger); }
+.env-detail { margin-top: 6px; font-size: 11px; color: var(--danger); word-break: break-word; }
+
+/* Écriture backend échouée : bandeau au-dessus des alertes, l'UI reste utilisable. */
+.sync-error {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  margin-bottom: 12px; padding: 10px 12px; border-radius: 12px;
+  background: #ef44441f; border: 1px solid #ef444466; font-size: 13px;
+}
+.sync-error > span { flex: 1; min-width: 160px; word-break: break-word; }
+
+/* Connexion (email + mot de passe, nouveau mot de passe). */
+.login-card {
+  display: flex; flex-direction: column; gap: 12px;
+  margin-top: 24px; padding: 18px; border-radius: 18px;
+  background: var(--card); border: 1px solid var(--border);
+}
+.login-title { margin: 0; font-size: 18px; font-weight: 700; }
+.login-error { margin: 0; color: var(--danger); font-size: 13px; }
+.login .link { background: none; color: var(--muted); font-size: 13px; text-decoration: underline; padding: 4px 0; align-self: flex-start; }
+.login .field input[type='email'], .login .field input[type='password'] {
+  background: var(--card-2); border: 1px solid var(--border); border-radius: 12px;
+  padding: 12px; width: 100%; outline: none; font-size: 16px;
+}
 .fab {
   width: 40px; height: 40px; border-radius: 12px;
   background: var(--text); color: var(--bg);
@@ -117,9 +152,26 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
   transition: transform 0.08s ease, background 0.15s ease;
   user-select: none; touch-action: manipulation;
 }
-.check:active { transform: scale(0.92); }
+.check:active { transform: scale(0.92); background: var(--c); color: var(--bg); }
 .check.done { background: var(--c); color: var(--bg); }
 .check.quit { border-style: dashed; }
+.check { position: relative; -webkit-touch-callout: none; }
+/* Pastille : nombre d'ajouts aujourd'hui, pour voir d'un coup d'œil que le tap a compté. */
+.check-badge {
+  position: absolute; top: -6px; right: -6px;
+  min-width: 20px; height: 20px; padding: 0 5px;
+  border-radius: 999px; border: 2px solid var(--card);
+  background: var(--c); color: var(--bg);
+  font-size: 11.5px; font-weight: 800; line-height: 1;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.check.done .check-badge { background: var(--text); }
+.check-badge.pop, .today-chip.pop { animation: pop-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1); }
+@keyframes pop-in {
+  from { transform: scale(0.4); opacity: 0; }
+  60% { transform: scale(1.15); opacity: 1; }
+  to { transform: none; opacity: 1; }
+}
 
 .card-foot { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
@@ -136,6 +188,7 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
 .chip.status-warning { background: #f59e0b1f; color: #fcd34d; }
 .chip.status-exceeded, .chip.status-missed { background: #ef44441f; color: #fca5a5; }
 .chip.cat { gap: 6px; color: var(--text); font-weight: 500; padding: 5px 11px; }
+.chip.today-chip { background: color-mix(in srgb, var(--c) 22%, transparent); color: var(--c); font-weight: 700; }
 .chip.cat strong { color: var(--c); }
 
 /* ---------- Heatmap ---------- */
@@ -213,6 +266,31 @@ button { cursor: pointer; border: 0; background: none; padding: 0; }
 .entry-time { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 13px; padding-top: 1px; }
 .entry-body { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 .entry-vals { display: flex; gap: 10px; font-weight: 600; font-size: 14px; }
+
+/* ---------- Toast (confirmation d'ajout) ---------- */
+.toast {
+  position: fixed; left: 50%; bottom: max(16px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 30;
+  display: flex; align-items: center; gap: 10px;
+  width: max-content; max-width: calc(100vw - 28px);
+  padding: 10px 10px 10px 12px;
+  background: var(--card-2); border: 1px solid var(--border); border-left: 4px solid var(--c);
+  border-radius: 14px;
+  box-shadow: 0 12px 32px -8px #000000cc;
+  animation: toast-in 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes toast-in { from { transform: translate(-50%, 16px); opacity: 0; } to { transform: translateX(-50%); opacity: 1; } }
+.toast-check {
+  width: 28px; height: 28px; flex: none; border-radius: 50%;
+  background: var(--c); color: var(--bg);
+  font-weight: 800; font-size: 15px;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.toast-text { display: flex; flex-direction: column; min-width: 0; }
+.toast-title { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.toast-sub { font-size: 12.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.toast .btn { padding: 7px 11px; font-size: 13px; flex: none; }
 
 /* ---------- Sheet / overlay ---------- */
 .overlay {

@@ -1,5 +1,49 @@
 # FUNCTIONS — Habikit
 
+## src/config.ts
+
+| Export | Type | Rôle |
+|---|---|---|
+| `APP_ENV` | `'local' \| 'dev' \| 'prod'` | Environnement du build (`VITE_APP_ENV`, défaut `local`). |
+| `SUPABASE_URL` / `SUPABASE_ANON_KEY` | `string` | Lues au build, vides sans config. |
+| `HAS_SUPABASE` | `boolean` | Vrai quand les deux sont renseignées. |
+
+## src/data/supabase.ts
+
+| Fonction | Signature | Rôle |
+|---|---|---|
+| `supabase` | `SupabaseClient \| null` | Client partagé, `null` sans config (mode localStorage). |
+| `pingSupabase` | `() => Promise<{status, detail?}>` | `head` select sur `habits` : valide URL, clé et schéma sans session. `none` / `checking` / `ok` / `error`. |
+
+## src/data/repo.ts
+
+| Export | Signature | Rôle |
+|---|---|---|
+| `Repo` | interface | `demo`, `load`, `upsertHabit`, `deleteHabit`, `upsertEntry`, `deleteEntry`, `reset`. |
+| `localRepo` | `Repo` | localStorage (`habikit:v2`) + fake data. Garde le snapshot en mémoire, réécrit tout à chaque opération. |
+| `newId` | `() => string` | uuid v4 (`crypto.randomUUID`, repli maison). |
+
+## src/data/supabaseRepo.ts
+
+| Export | Signature | Rôle |
+|---|---|---|
+| `supabaseRepo` | `Repo` | Lecture 13 mois, upsert / delete par ligne, habitudes de départ au premier login. |
+| `forgetUser` | `() => void` | Oublie le `user_id` mis en cache (appelé à la déconnexion). |
+
+## src/auth.tsx
+
+| Export | Signature | Rôle |
+|---|---|---|
+| `AuthProvider` | composant | Écoute `onAuthStateChange`, détecte `PASSWORD_RECOVERY`, nettoie l'URL. |
+| `useAuth` | `() => { loading, session, recovering, local, signOut, finishRecovery }` | `local` = pas de backend configuré. |
+| `AuthGate` | composant | Sans session → `Login` ; session de récupération → `SetPassword` ; sinon l'app. |
+
+## src/store.tsx
+
+| Export | Signature | Rôle |
+|---|---|---|
+| `useStore` | `() => { state, actions, demo, syncError, dismissSyncError }` | `actions.*` : dispatch optimiste puis écriture `Repo`. `reload()` rejoue `load()`. |
+
 ## src/lib/dates.ts
 
 | Fonction | Signature | Rôle |
@@ -68,9 +112,16 @@ const streak = currentStreak(habit, own);  // 3 (jours sans, pour une habitude q
 | Composant | Props clés | Rôle |
 |---|---|---|
 | `Heatmap` | `habit, totals, cell?, gap?, weeks?` | Grille GitHub, colonnes = semaines, s'adapte à la largeur (ResizeObserver). |
-| `HabitCard` | `habit, entries, onOpen, onQuickLog, onDetailedLog` | Carte du dashboard. Tap bouton = +1 ou fiche, appui long (420 ms) = fiche. |
+| `HabitCard` | `habit, entries, onOpen, onQuickLog, onDetailedLog` | Carte du dashboard. Tap bouton = +1 (ou fiche si durée / montant à saisir), appui long (450 ms) = fiche. Pastille = nombre d'ajouts du jour, animation quand le total du jour augmente. |
 | `HabitDetail` | `habit, entries, onBack, onEdit, onAddEntry, onEditEntry, onDeleteEntry` | Écran de détail. |
 | `MonthCalendar` | `habit, month, totals, selected, onSelect, onPrev, onNext, monthTotal` | Calendrier mensuel coloré avec valeur par jour. |
 | `LogSheet` | `habit, date?, entry?, onSave, onDelete?, onClose` | Fiche de saisie / édition d'une entrée. Chips `habit.options` + « Autre… » (texte libre) → `entry.category`. |
 | `HabitForm` | `habit?, onSave, onDelete?, onClose` | Création / édition d'une habitude. Les choix se saisissent séparés par des virgules, avec un défaut et l'option « Autre ». |
 | `AlertsBanner` | `alerts, onOpen` | Bandeau d'alertes cliquables. |
+
+## src/App.tsx
+
+| Élément | Rôle |
+|---|---|
+| `describeEntry(habit, entry)` | Résumé court d'une entrée pour le toast : « +1 Bière », « Vélo · 1h30 », « 34 € · Amazon ». |
+| Toast | Après `quickLog` ou enregistrement d'une nouvelle entrée : confirmation en bas, bouton **Annuler** = `deleteEntry`, disparaît après 4 s. |

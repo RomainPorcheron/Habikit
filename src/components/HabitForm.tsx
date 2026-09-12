@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { ColorKey, FieldKey, Goal, Habit, HabitKind, Metric, Period } from '../types';
 import { COLOR_KEYS, EMOJIS, PALETTE } from '../lib/colors';
 
@@ -59,8 +59,15 @@ export function HabitForm({ habit, onSave, onDelete, onClose }: Props) {
     });
   };
 
+  // Fermeture au tap sur le fond uniquement si l'appui a commencé sur le fond (ignore un clic fantôme après appui long).
+  const downOnOverlay = useRef(false);
+
   return (
-    <div className="overlay" onClick={onClose}>
+    <div
+      className="overlay"
+      onPointerDown={(e) => { downOnOverlay.current = e.target === e.currentTarget; }}
+      onClick={(e) => { if (e.target === e.currentTarget && downOnOverlay.current) onClose(); }}
+    >
       <div className="sheet form" onClick={(e) => e.stopPropagation()}>
         <div className="sheet-head">
           <strong>{habit ? 'Modifier l’habitude' : 'Nouvelle habitude'}</strong>
