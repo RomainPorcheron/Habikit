@@ -14,11 +14,13 @@ interface Props {
   onBack(): void;
   onEdit(): void;
   onAddEntry(date: string): void;
+  /** +1 direct sur un jour (pas de fiche). */
+  onQuickAdd(date: string): void;
   onEditEntry(entry: Entry): void;
   onDeleteEntry(id: string): void;
 }
 
-export function HabitDetail({ habit, entries, onBack, onEdit, onAddEntry, onEditEntry, onDeleteEntry }: Props) {
+export function HabitDetail({ habit, entries, onBack, onEdit, onAddEntry, onQuickAdd, onEditEntry, onDeleteEntry }: Props) {
   const t = today();
   const [month, setMonth] = useState(() => new Date(t.getFullYear(), t.getMonth(), 1));
   const [selected, setSelected] = useState<string | null>(toKey(t));
@@ -51,6 +53,12 @@ export function HabitDetail({ habit, entries, onBack, onEdit, onAddEntry, onEdit
   const weeklyMax = Math.max(1, ...weekly.map((w) => w.value));
 
   const selectedEntries = selected ? byDay.get(selected) ?? [] : [];
+  const todayKey = toKey(t);
+  const selectedIsPast = !!selected && selected <= todayKey;
+  // Même règle que la carte : +1 direct sauf si une durée / un montant est à saisir.
+  const needsSheet = habit.fields.includes('duration') || habit.fields.includes('amount');
+  const quickLabel = needsSheet ? 'Ajouter…' : `+1 ${habit.defaultOption ?? habit.unit}`.trim();
+  const quick = (date: string) => (needsSheet ? onAddEntry(date) : onQuickAdd(date));
 
   // Répartition par type sur le mois affiché (Bière / Vin…, Vélo / Escalade…).
   const byCategory = useMemo(() => {
@@ -77,6 +85,54 @@ export function HabitDetail({ habit, entries, onBack, onEdit, onAddEntry, onEdit
         </div>
         <button className="ghost" onClick={onEdit} aria-label="Modifier">✎</button>
       </header>
+
+      <MonthCalendar
+        habit={habit}
+        month={month}
+        totals={totals}
+        selected={selected}
+        onSelect={(k) => setSelected(k === selected ? null : k)}
+        onQuickAdd={(k) => { setSelected(k); quick(k); }}
+        onDetailedAdd={(k) => { setSelected(k); onAddEntry(k); }}
+        hint={needsSheet ? 'Tap sur un jour : ajouter' : 'Tap sur un jour : +1 · appui long : préciser'}
+        onPrev={() => setMonth(addMonths(month, -1))}
+        onNext={() => setMonth(addMonths(month, 1))}
+        monthTotal={shownMonthTotal}
+      />
+
+      <section className="card entries">
+        <div className="section-title">
+          {selected ? formatLong(fromKey(selected)) : 'Sélectionne un jour'}
+          {selected && selectedEntries.length > 0 && (
+            <span className="muted small"> · {formatValue(sumEntries(selectedEntries, habit.metric), habit.metric, unit)}</span>
+          )}
+        </div>
+        {selected && selectedEntries.length === 0 && <div className="muted small">Rien ce jour-là.</div>}
+        {selectedEntries.map((e) => (
+          <div key={e.id} className="entry">
+            <button className="entry-main" onClick={() => onEditEntry(e)}>
+              <span className="entry-time">{formatTime(e.at)}</span>
+              <span className="entry-body">
+                <span className="entry-vals">
+                  {e.category && <span>{e.category}</span>}
+                  {(habit.metric === 'count' || e.count !== 1) && <span>{e.count} {habit.unit}</span>}
+                  {e.duration != null && <span>{formatValue(e.duration, 'duration')}</span>}
+                  {e.amount != null && <span>{formatValue(e.amount, 'amount')}</span>}
+                </span>
+                {e.note && <span className="muted small">{e.note}</span>}
+              </span>
+            </button>
+            <button className="ghost danger" onClick={() => onDeleteEntry(e.id)} aria-label="Supprimer">×</button>
+          </div>
+        ))}
+        {selected && selectedIsPast && (
+          <div className="entry-actions">
+            <button className="btn primary big" onClick={() => quick(selected)}>{quickLabel}</button>
+            {!needsSheet && <button className="btn secondary" onClick={() => onAddEntry(selected)}>Préciser…</button>}
+          </div>
+        )}
+        {selected && !selectedIsPast && <div className="muted small">Jour à venir.</div>}
+      </section>
 
       <section className="card">
         <Heatmap habit={habit} totals={totals} />
@@ -120,19 +176,8 @@ export function HabitDetail({ habit, entries, onBack, onEdit, onAddEntry, onEdit
         </div>
       </section>
 
-      <MonthCalendar
-        habit={habit}
-        month={month}
-        totals={totals}
-        selected={selected}
-        onSelect={(k) => setSelected(k === selected ? null : k)}
-        onPrev={() => setMonth(addMonths(month, -1))}
-        onNext={() => setMonth(addMonths(month, 1))}
-        monthTotal={shownMonthTotal}
-      />
 
-      {byCategory.length > 0 && (
-        <section className="card">
+      {byCategory.length > 0 && (        <section className="card">
           <div className="section-title">Par type · {MONTHS_FR[month.getMonth()]}</div>
           <div className="chips">
             {byCategory.map(([k, v]) => (
@@ -144,35 +189,6 @@ export function HabitDetail({ habit, entries, onBack, onEdit, onAddEntry, onEdit
         </section>
       )}
 
-      <section className="card entries">
-        <div className="section-title">
-          {selected ? formatLong(fromKey(selected)) : 'Sélectionne un jour'}
-          {selected && selectedEntries.length > 0 && (
-            <span className="muted small"> · {formatValue(sumEntries(selectedEntries, habit.metric), habit.metric, unit)}</span>
-          )}
-        </div>
-        {selected && selectedEntries.length === 0 && <div className="muted small">Rien ce jour-là.</div>}
-        {selectedEntries.map((e) => (
-          <div key={e.id} className="entry">
-            <button className="entry-main" onClick={() => onEditEntry(e)}>
-              <span className="entry-time">{formatTime(e.at)}</span>
-              <span className="entry-body">
-                <span className="entry-vals">
-                  {e.category && <span>{e.category}</span>}
-                  {(habit.metric === 'count' || e.count !== 1) && <span>{e.count} {habit.unit}</span>}
-                  {e.duration != null && <span>{formatValue(e.duration, 'duration')}</span>}
-                  {e.amount != null && <span>{formatValue(e.amount, 'amount')}</span>}
-                </span>
-                {e.note && <span className="muted small">{e.note}</span>}
-              </span>
-            </button>
-            <button className="ghost danger" onClick={() => onDeleteEntry(e.id)} aria-label="Supprimer">×</button>
-          </div>
-        ))}
-        {selected && (
-          <button className="btn secondary" onClick={() => onAddEntry(selected)}>+ Ajouter une entrée</button>
-        )}
-      </section>
     </div>
   );
 }

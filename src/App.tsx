@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { Entry, Habit } from './types';
 import { useStore } from './store';
 import { useAuth } from './auth';
-import { formatLong, toKey, today } from './lib/dates';
+import { formatLong, fromKey, toKey, today } from './lib/dates';
 import { alertsFor, entriesOf, formatValue } from './lib/stats';
 import { PALETTE } from './lib/colors';
 import { HabitCard } from './components/HabitCard';
@@ -69,10 +69,13 @@ export default function App() {
 
   const confirmAdded = (habit: Habit, entry: Entry) => setToast({ id: Date.now(), habit, entry });
 
-  const quickLog = (habitId: string) => {
+  // +1 direct. Sur un jour passé, l'heure est fixée à midi (on ne la connaît pas).
+  const quickLog = (habitId: string, date = toKey(today())) => {
     const habit = state.habits.find((h) => h.id === habitId);
     if (!habit) return;
-    const entry = actions.addEntry({ habitId, date: toKey(today()), at: new Date().toISOString(), count: 1, category: habit.defaultOption });
+    const d = fromKey(date);
+    const at = date === toKey(today()) ? new Date() : new Date(d.getFullYear(), d.getMonth(), d.getDate(), 12, 0);
+    const entry = actions.addEntry({ habitId, date, at: at.toISOString(), count: 1, category: habit.defaultOption });
     confirmAdded(habit, entry);
   };
 
@@ -151,6 +154,7 @@ export default function App() {
             onBack={() => setScreen({ name: 'dashboard' })}
             onEdit={() => setForm({ habitId: habit.id })}
             onAddEntry={(date) => setSheet({ habitId: habit.id, date })}
+            onQuickAdd={(date) => quickLog(habit.id, date)}
             onEditEntry={(entry) => setSheet({ habitId: habit.id, entry })}
             onDeleteEntry={(id) => actions.deleteEntry(id)}
           />

@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import type { Habit } from '../types';
 import { MONTHS_FR, WEEKDAYS_SHORT, endOfMonth, startOfMonth, toKey, today } from '../lib/dates';
 import { formatValue, heatLevel, scaleFor } from '../lib/stats';
@@ -8,13 +9,42 @@ interface Props {
   month: Date;
   totals: Map<string, number>;
   selected: string | null;
+  /** Tap sur un jour futur : juste le sélectionner. */
   onSelect(key: string): void;
+  /** Tap court sur un jour passé : +1 direct. */
+  onQuickAdd(key: string): void;
+  /** Appui long sur un jour passé : formulaire complet. */
+  onDetailedAdd(key: string): void;
+  /** Astuce affichée sous la grille. */
+  hint: string;
   onPrev(): void;
   onNext(): void;
   monthTotal: number;
 }
 
-export function MonthCalendar({ habit, month, totals, selected, onSelect, onPrev, onNext, monthTotal }: Props) {
+export function MonthCalendar({ habit, month, totals, selected, onSelect, onQuickAdd, onDetailedAdd, hint, onPrev, onNext, monthTotal }: Props) {
+  // Tap court = +1 direct, appui long = formulaire (même geste que sur la carte). Jour futur : juste sélectionner.
+  const timer = useRef<number | null>(null);
+  const longFired = useRef(false);
+  const down = (key: string, past: boolean) => {
+    longFired.current = false;
+    if (!past) return;
+    timer.current = window.setTimeout(() => {
+      longFired.current = true;
+      if (navigator.vibrate) navigator.vibrate(30);
+      onDetailedAdd(key);
+    }, 420);
+  };
+  const up = (key: string, past: boolean) => {
+    if (timer.current) window.clearTimeout(timer.current);
+    if (longFired.current) return;
+    if (past) onQuickAdd(key);
+    else onSelect(key);
+  };
+  const cancel = () => {
+    if (timer.current) window.clearTimeout(timer.current);
+  };
+
   const first = startOfMonth(month);
   const last = endOfMonth(month);
   const lead = (first.getDay() + 6) % 7;
@@ -45,13 +75,23 @@ export function MonthCalendar({ habit, month, totals, selected, onSelect, onPrev
           const level = heatLevel(v, scale);
           const cls = ['calendar-day', key === todayKey ? 'today' : '', key === selected ? 'selected' : '', key > todayKey ? 'future' : ''].join(' ');
           return (
-            <button key={key} className={cls} style={{ backgroundColor: levelColor(habit.color, level) }} onClick={() => onSelect(key)}>
+            <button
+              key={key}
+              className={cls}
+              style={{ backgroundColor: levelColor(habit.color, level) }}
+              onPointerDown={() => down(key, key <= todayKey)}
+              onPointerUp={() => up(key, key <= todayKey)}
+              onPointerLeave={cancel}
+              onPointerCancel={cancel}
+              onContextMenu={(e) => e.preventDefault()}
+            >
               <span className="day-num">{d.getDate()}</span>
               {v > 0 && <span className="day-val">{formatValue(v, habit.metric)}</span>}
             </button>
           );
         })}
       </div>
+      <div className="muted small calendar-hint">{hint}</div>
     </section>
   );
 }
